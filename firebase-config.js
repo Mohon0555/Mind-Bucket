@@ -2,9 +2,9 @@
 // These values identify the Firebase project; they are meant to be public in website code.
 // Access to each person's data is protected by the Firestore rules in firestore.rules.
 //
-// Leave this as null to run Mind Bucket in guest-only mode (no sign-in button).
-// To turn sign-in on, replace null with the config object from
-// Firebase console → Project settings → General → Your apps → Web app, for example:
+// Set to null to run Mind Bucket in guest-only mode (no sign-in button).
+// The object comes from Firebase console → Project settings → General → Your apps → Web app.
+// Example shape:
 //
 // window.MB_FIREBASE = {
 //   apiKey: "…",
@@ -14,4 +14,11 @@
 //   messagingSenderId: "…",
 //   appId: "…"
 // };
-window.MB_FIREBASE = null;
+window.MB_FIREBASE = {
+  apiKey: "AIzaSyB3IsEVmS8ug_9SoHyN_lUMylxiwrqh1Rk",
+  authDomain: "mind-bucket-planner.firebaseapp.com",
+  projectId: "mind-bucket-planner",
+  storageBucket: "mind-bucket-planner.firebasestorage.app",
+  messagingSenderId: "1004382126890",
+  appId: "1:1004382126890:web:152f0c88e7024344f91453"
+};
