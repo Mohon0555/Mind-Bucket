@@ -21,9 +21,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap">
+<script>try{var t=localStorage.getItem('mindbucket.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <style>
 /* Layout: black app frame → top bar → rounded grey canvas (main column + side panel) → floating quick-add dock */
 :root{
+  color-scheme:light;
   --frame:#111111; --frame-ink:#FFFFFF; --frame-ink-2:#A1A1A1; --frame-hover:#262626;
   --canvas:#F3F3F3; --surface:#FFFFFF; --subtle:#ECECEC; --muted:#E2E2E2;
   --line:#E2E2E2; --line-strong:#CFCFCF;
@@ -128,6 +130,8 @@ svg{flex:none}
 .status .dot{width:6px;height:6px;border-radius:50%;background:var(--mint-ac)}
 .avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--lavender-ac);color:var(--lavender-fg);font-size:12px;font-weight:600;border:0}
 .top :focus-visible{outline-color:var(--frame-ink)}
+.theme-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--frame-hover);background:none;color:var(--frame-ink-2)}
+.theme-btn:hover{color:var(--frame-ink);background:var(--frame-hover)}
 
 /* shell */
 .shell{flex:1;min-height:0;background:var(--canvas);border-radius:28px 28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) 368px;overflow:hidden}
@@ -530,7 +534,8 @@ const ICONS = {
   trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   cloud:'<path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/>',
   device:'<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/>',
-  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  moon:'<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>'
 };
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 
@@ -748,8 +753,23 @@ function toggleTodo(id) {
 function removeRef(kind, id) { S.sessions = S.sessions.filter(s => !(s.kind === kind && s.refId === id)); }
 
 /* ---------------- render: top + dock ---------------- */
+/* ---------------- theme ---------------- */
+const THEME_KEY = 'mindbucket.theme';
+const darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+let THEME = (() => { try { const t = localStorage.getItem(THEME_KEY); return t === 'light' || t === 'dark' ? t : 'system'; } catch (e) { return 'system'; } })();
+const effectiveTheme = () => THEME === 'system' ? (darkMQ && darkMQ.matches ? 'dark' : 'light') : THEME;
+function setTheme(p) {
+  THEME = p === 'light' || p === 'dark' ? p : 'system';
+  try { if (THEME === 'system') localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, THEME); } catch (e) {}
+  if (THEME === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', THEME);
+  renderTop();
+  if (UI.modal && UI.modal.type === 'settings') renderModal();
+}
+if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => { if (THEME === 'system') renderTop(); });
+
 function renderTop() {
   const cloud = false;
+  const eff = effectiveTheme(); const next = eff === 'dark' ? 'light' : 'dark';
   $('#top').innerHTML = `
     <button class="logo" data-act="nav" data-view="calendar" aria-label="Mind Bucket home">
       <span class="mark" aria-hidden="true"><i style="background:var(--butter-ac)"></i><i style="background:var(--lavender-ac)"></i><i style="background:var(--mint-ac)"></i><i style="background:var(--sky-ac)"></i></span>
@@ -759,6 +779,7 @@ function renderTop() {
       ${VIEWS.map(v => `<button type="button" data-act="nav" data-view="${v.id}" aria-label="${v.label}" title="${v.label}" ${UI.view === v.id ? 'aria-current="page"' : ''}>${icon(v.icon, 20)}<span class="lbl">${v.label}</span></button>`).join('')}
     </nav>
     <div class="who">
+      <button class="theme-btn" data-act="toggle-theme" aria-label="Switch to ${next} mode" title="Switch to ${next} mode">${icon(eff === 'dark' ? 'sun' : 'moon', 18)}</button>
       <button class="status" data-act="settings" title="${storageLabel()}">${icon(cloud ? 'cloud' : 'device', 16)}<span class="t">${storageLabel()}</span></button>
       <button class="avatar" data-act="settings" aria-label="Guest settings" title="Guest">G</button>
     </div>`;
@@ -1184,6 +1205,7 @@ function renderModal() {
     const hourOpt = (sel, from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i).map(h => `<option value="${h}" ${Number(sel) === h ? 'selected' : ''}>${h === 24 ? 'Midnight' : fmtTime(h * 60)}</option>`).join('');
     html = `<div class="mbody">${mhead('Guest settings', 'No account needed. You are using Mind Bucket as a guest.')}
       <div class="note">${cloud ? `${icon('cloud', 16)} Your planner is saved privately to your Claude account, so it follows you to other devices. Nobody else who opens this page can see it.` : `${icon('device', 16)} Your planner is saved in this browser only. Clearing your browser data removes it, so download a backup now and then. A backup also moves your planner to another browser or device.`}</div>
+      <div class="field"><span>Appearance</span>${seg('set-theme', [['light','Light'],['dark','Dark'],['system','Match my device']], THEME)}</div>
       <div class="two">${field('Week starts on', `<select data-change="set-week" id="f-sweek">${[[6,'Saturday'],[0,'Sunday'],[1,'Monday']].map(([v, l]) => `<option value="${v}" ${Number(S.settings.weekStart) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
       <div class="two">${field('Day starts', `<select data-change="set-start" id="f-sstart">${hourOpt(S.settings.dayStart, 4, 10)}</select>`)}${field('Day ends', `<select data-change="set-end" id="f-send">${hourOpt(S.settings.dayEnd, 18, 24)}</select>`)}</div></div>
       <section class="field"><span>Backup</span><textarea id="f-export" readonly rows="3" aria-label="Backup data">${esc(JSON.stringify(S))}</textarea><div class="tpl"><button type="button" class="btn btn-secondary btn-sm" data-act="download-export">Download backup file</button><button type="button" class="btn btn-ghost btn-sm" data-act="copy-export">Copy as text</button></div></section>
@@ -1224,6 +1246,8 @@ function act(a, el, e) {
   switch (a) {
     case 'nav': go(el.dataset.view); break;
     case 'settings': openModal({ type:'settings' }); break;
+    case 'toggle-theme': setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark'); break;
+    case 'set-theme': setTheme(el.dataset.v); break;
     case 'overlay': if (e.target === el) closeModal(); break;
     case 'close-modal': closeModal(); break;
     case 'keep-sample': commit(() => { S.sample = false; }); break;
