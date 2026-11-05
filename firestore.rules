@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Paste these into Firebase console → Firestore Database → Rules, then click Publish.
+// Each signed-in person can read and write only their own planner document: users/{their uid}.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['json', 'updatedAt', 'schema', 'savedAt'])
+        && request.resource.data.json is string
+        && request.resource.data.json.size() < 900000
+        && request.resource.data.updatedAt is number;
+    }
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

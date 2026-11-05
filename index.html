@@ -132,6 +132,17 @@ svg{flex:none}
 .top :focus-visible{outline-color:var(--frame-ink)}
 .theme-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--frame-hover);background:none;color:var(--frame-ink-2)}
 .theme-btn:hover{color:var(--frame-ink);background:var(--frame-hover)}
+.avatar{overflow:hidden;padding:0}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.signin{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--frame-ink);color:var(--frame);font-size:13px;font-weight:600;white-space:nowrap}
+.signin:hover{opacity:.9}
+.status.warn{color:var(--butter-ac);border-color:var(--butter-ac)}
+.acct{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:var(--subtle)}
+.acct .avatar{width:44px;height:44px;font-size:14px;flex:none}
+.acct-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.acct-t b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-t small{font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.welcome-actions{display:flex;flex-direction:column;gap:8px}
 
 /* shell */
 .shell{flex:1;min-height:0;background:var(--canvas);border-radius:28px 28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) 368px;overflow:hidden}
@@ -465,6 +476,7 @@ fieldset.field{border:0;padding:0;margin:0}
 <div id="modal-root"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
+<script src="/firebase-config.js"></script>
 <script>
 (() => {
 'use strict';
@@ -535,6 +547,7 @@ const ICONS = {
   cloud:'<path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/>',
   device:'<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   moon:'<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>'
 };
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -658,10 +671,140 @@ function migrate(d) {
 
 /* ---------------- storage ---------------- */
 let S = null;
-function loadLocal() { try { const raw = localStorage.getItem(LS_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) {} return null; }
-function persistLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} }
-function save() { S.updatedAt = Date.now(); persistLocal(); }
-const storageLabel = () => 'Saved in this browser';
+/* Guest data lives under LS_KEY. A signed-in user's planner is cached per account under LS_KEY.u.<uid>
+   and saved to Firestore at users/<uid> (one document, the planner as a JSON string). */
+const AUTH = { configured:false, available:false, loading:false, loadError:false, user:null, fb:null, ref:null, unsub:null,
+  status:'guest', sIsUser:false, gotFirst:false, writing:false, again:false, timer:null };
+const LAST_UID_KEY = 'mindbucket.lastUid';
+const FB_VERSION = '10.12.2';
+const userKey = uid => LS_KEY + '.u.' + uid;
+const storeKey = () => (AUTH.user && AUTH.sIsUser) ? userKey(AUTH.user.uid) : LS_KEY;
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch (e) {} };
+function loadLocal(key) { try { const raw = localStorage.getItem(key || LS_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) {} return null; }
+function persistLocal() { lsSet(storeKey(), JSON.stringify(S)); }
+function save() { S.updatedAt = Date.now(); persistLocal(); cloudQueue(); }
+const storageLabel = () => {
+  if (!AUTH.user) return 'Saved in this browser';
+  return ({ loading:'Opening your planner…', saving:'Saving…', offline:'Offline · will sync', error:'Not synced yet', choose:'Choose what to keep' })[AUTH.status] || 'Synced to your account';
+};
+const initials = s => String(s || '?').split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+
+async function initAuth() {
+  const cfg = window.MB_FIREBASE;
+  if (!cfg || !cfg.apiKey || !cfg.projectId) return;
+  AUTH.configured = true; AUTH.loading = true; renderTop();
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FB_VERSION}/`;
+    const [appM, authM, fsM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    const app = appM.initializeApp(cfg);
+    const auth = authM.getAuth(app);
+    const db = fsM.getFirestore(app);
+    AUTH.fb = { authM, fsM, auth, db }; AUTH.available = true;
+    authM.onAuthStateChanged(auth, u => { AUTH.loading = false; onUser(u); });
+    authM.getRedirectResult(auth).catch(authError);
+  } catch (e) {
+    AUTH.loading = false; AUTH.loadError = true;
+    if (BOOT_UID) { BOOT_UID = null; S = loadLocal(LS_KEY) || sample(); render(); }
+    renderTop();
+  }
+}
+function onUser(u) {
+  if (AUTH.unsub) { AUTH.unsub(); AUTH.unsub = null; }
+  clearTimeout(AUTH.timer); AUTH.ref = null; AUTH.gotFirst = false;
+  if (!u) {
+    const wasShowingUser = !!AUTH.user || !!BOOT_UID;
+    AUTH.user = null; AUTH.sIsUser = false; AUTH.status = 'guest'; BOOT_UID = null; lsDel(LAST_UID_KEY);
+    if (wasShowingUser) { S = loadLocal(LS_KEY) || sample(); UI.ideaSel = null; UI.planSel = null; if (UI.modal && UI.modal.type === 'welcome') UI.modal = null; render(); }
+    else renderTop();
+    return;
+  }
+  AUTH.user = { uid:u.uid, name:u.displayName || '', email:u.email || '', photo:u.photoURL || '' };
+  lsSet(LAST_UID_KEY, u.uid);
+  const cached = loadLocal(userKey(u.uid));
+  if (cached) { if (BOOT_UID !== u.uid) { S = cached; render(); } AUTH.sIsUser = true; }
+  else if (BOOT_UID) { S = loadLocal(LS_KEY) || sample(); render(); }
+  BOOT_UID = null;
+  AUTH.status = 'loading'; renderTop();
+  const { fsM, db } = AUTH.fb; const ref = fsM.doc(db, 'users', u.uid); AUTH.ref = ref;
+  AUTH.unsub = fsM.onSnapshot(ref, snap => {
+    if (AUTH.ref !== ref || snap.metadata.hasPendingWrites) return;
+    const first = !AUTH.gotFirst; AUTH.gotFirst = true;
+    if (!snap.exists()) { if (first) firstSignIn(); return; }
+    let remote;
+    try { const d = snap.data(); remote = migrate(JSON.parse(d.json)); remote.updatedAt = Number(d.updatedAt) || remote.updatedAt || 0; } catch (e) { return; }
+    if (!AUTH.sIsUser || (remote.updatedAt || 0) > (S.updatedAt || 0)) {
+      S = remote; AUTH.sIsUser = true; persistLocal();
+      if (UI.modal) UI.pendingRender = true; else render();
+    } else if ((S.updatedAt || 0) > (remote.updatedAt || 0)) cloudQueue();
+    if (!AUTH.writing) AUTH.status = navigator.onLine === false ? 'offline' : 'synced';
+    renderTop();
+  }, () => { if (AUTH.ref === ref) { AUTH.status = 'error'; renderTop(); toast('Could not reach your account. Changes stay on this device for now.'); } });
+}
+function firstSignIn() {
+  if (AUTH.sIsUser) { if (S.updatedAt) cloudQueue(); AUTH.status = 'synced'; renderTop(); return; }
+  const g = loadLocal(LS_KEY);
+  const hasGuestData = g && !g.sample && ['buckets','interests','todos','purchases','ideas','plans'].some(k => g[k].length);
+  if (hasGuestData) { S = g; AUTH.status = 'choose'; render(); openModal({ type:'welcome' }); return; }
+  S = sample(); AUTH.sIsUser = true; persistLocal(); AUTH.status = 'synced'; render();
+  toast(`Signed in as ${AUTH.user.email || AUTH.user.name}`);
+}
+function cloudQueue() { if (!AUTH.ref || !AUTH.sIsUser) return; clearTimeout(AUTH.timer); AUTH.timer = setTimeout(cloudWrite, 800); }
+async function cloudWrite() {
+  if (!AUTH.ref || !AUTH.sIsUser) return;
+  if (AUTH.writing) { AUTH.again = true; return; }
+  const ref = AUTH.ref; AUTH.writing = true;
+  AUTH.status = navigator.onLine === false ? 'offline' : 'saving'; renderTop();
+  try {
+    const json = JSON.stringify(S);
+    if (json.length > 900000) throw { code:'too-big' };
+    await AUTH.fb.fsM.setDoc(ref, { json, updatedAt: S.updatedAt || Date.now(), schema: 1, savedAt: AUTH.fb.fsM.serverTimestamp() });
+    if (AUTH.ref === ref) AUTH.status = 'synced';
+  } catch (e) {
+    if (AUTH.ref === ref) { AUTH.status = 'error'; toast(e && e.code === 'too-big' ? 'Your planner is too big to sync. Remove some old items.' : 'Could not save to your account. Your changes stay on this device.'); }
+  } finally {
+    AUTH.writing = false; renderTop();
+    if (AUTH.again) { AUTH.again = false; cloudQueue(); }
+  }
+}
+async function signIn() {
+  if (!AUTH.available) { toast(AUTH.loadError ? 'Sign-in could not load. Check your connection and try again.' : AUTH.loading ? 'Sign-in is still loading. Try again in a moment.' : 'Sign-in is not set up yet.'); return; }
+  const { authM, auth } = AUTH.fb;
+  const provider = new authM.GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' });
+  try { await authM.signInWithPopup(auth, provider); }
+  catch (err) {
+    const c = err && err.code;
+    if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await authM.signInWithRedirect(auth, provider); } catch (e2) { authError(e2); } }
+    else authError(err);
+  }
+}
+function authError(err) {
+  const c = err && err.code;
+  if (!c || c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return;
+  toast(c === 'auth/unauthorized-domain' ? 'This website is not approved for Google sign-in yet.' : c === 'auth/network-request-failed' ? 'No connection. Try again when you are online.' : 'Sign-in did not work. Please try again.');
+}
+async function signOut() {
+  if (!AUTH.fb || !AUTH.user) return;
+  const uid = AUTH.user.uid;
+  clearTimeout(AUTH.timer); AUTH.sIsUser = false;
+  lsDel(userKey(uid)); lsDel(LAST_UID_KEY);
+  try { await AUTH.fb.authM.signOut(AUTH.fb.auth); toast('Signed out. Your planner is safe in your account.'); } catch (e) { toast('Could not sign out. Try again.'); }
+}
+async function deleteCloudData() {
+  if (!AUTH.fb || !AUTH.ref || !AUTH.user) return;
+  const ref = AUTH.ref, uid = AUTH.user.uid;
+  try {
+    clearTimeout(AUTH.timer); AUTH.sIsUser = false;
+    await AUTH.fb.fsM.deleteDoc(ref);
+    lsDel(userKey(uid)); lsDel(LAST_UID_KEY); closeModal();
+    await AUTH.fb.authM.signOut(AUTH.fb.auth);
+    toast('Your account data was deleted');
+  } catch (e) { AUTH.sIsUser = true; toast('Could not delete it. Try again when you are online.'); }
+}
+window.addEventListener('online', () => { if (AUTH.user && AUTH.status === 'offline') { AUTH.status = AUTH.writing ? 'saving' : 'synced'; renderTop(); } });
+window.addEventListener('offline', () => { if (AUTH.user) { AUTH.status = 'offline'; renderTop(); } });
+let BOOT_UID = null;
 
 /* ---------------- ui state ---------------- */
 const UI = {
@@ -780,8 +923,14 @@ function renderTop() {
     </nav>
     <div class="who">
       <button class="theme-btn" data-act="toggle-theme" aria-label="Switch to ${next} mode" title="Switch to ${next} mode">${icon(eff === 'dark' ? 'sun' : 'moon', 18)}</button>
-      <button class="status" data-act="settings" title="${storageLabel()}">${icon(cloud ? 'cloud' : 'device', 16)}<span class="t">${storageLabel()}</span></button>
-      <button class="avatar" data-act="settings" aria-label="Guest settings" title="Guest">G</button>
+      ${AUTH.user
+        ? `<button class="status${AUTH.status === 'error' || AUTH.status === 'offline' ? ' warn' : ''}" data-act="settings" title="${storageLabel()}">${icon(AUTH.status === 'synced' ? 'cloud' : AUTH.status === 'offline' ? 'device' : 'clock', 16)}<span class="t">${storageLabel()}</span></button>
+           <button class="avatar" data-act="settings" aria-label="Account and settings" title="${esc(AUTH.user.email || AUTH.user.name)}">${AUTH.user.photo ? `<img src="${esc(AUTH.user.photo)}" alt="" referrerpolicy="no-referrer">` : esc(initials(AUTH.user.name || AUTH.user.email))}</button>`
+        : AUTH.configured && !AUTH.loadError
+          ? `<button class="signin" data-act="sign-in" title="Sign in with Google to keep your planner in your account">${icon('user', 16)}<span class="t">Sign in</span></button>
+             <button class="avatar" data-act="settings" aria-label="Guest settings" title="Guest">G</button>`
+          : `<button class="status" data-act="settings" title="${storageLabel()}">${icon(cloud ? 'cloud' : 'device', 16)}<span class="t">${storageLabel()}</span></button>
+             <button class="avatar" data-act="settings" aria-label="Guest settings" title="Guest">G</button>`}
     </div>`;
 }
 function renderDock() {
@@ -1200,17 +1349,32 @@ function renderModal() {
   } else if (m.type === 'chooser') {
     const c = (tone, ic, type, l) => `<button type="button" class="t-${tone}" data-act="quick" data-type="${type}">${icon(ic, 20)}${l}</button>`;
     html = `<div class="mbody">${mhead('Add something')}<div class="chooser">${c('butter','checksq','todo','To-do')}${c('lavender','star','interest','Interest')}${c('mint','bag','purchase','Purchase')}${c('sky','idea','idea','Idea')}${c('rose','map','plan','Plan')}${c('slate','calendar','bucket','Bucket')}</div></div>`;
+  } else if (m.type === 'welcome') {
+    const u = AUTH.user || {};
+    html = `<div class="mbody"><div class="mhead"><div><h2>Welcome${u.name ? ', ' + esc(u.name.split(' ')[0]) : ''}</h2><p class="muted">You are signed in as ${esc(u.email || u.name || 'your Google account')}.</p></div></div>
+      <p>This browser already has a planner from guest mode. Do you want to keep it in your account?</p>
+      <div class="welcome-actions"><button type="button" class="btn btn-primary btn-block" data-act="migrate-move">${icon('cloud')}Move it to my account</button>
+      <button type="button" class="btn btn-secondary btn-block" data-act="migrate-fresh">Start fresh with a sample week</button></div>
+      <p class="muted">Moving it saves it to your account and removes the guest copy from this browser.</p></div>`;
   } else if (m.type === 'settings') {
     const cloud = false;
     const hourOpt = (sel, from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i).map(h => `<option value="${h}" ${Number(sel) === h ? 'selected' : ''}>${h === 24 ? 'Midnight' : fmtTime(h * 60)}</option>`).join('');
-    html = `<div class="mbody">${mhead('Guest settings', 'No account needed. You are using Mind Bucket as a guest.')}
-      <div class="note">${cloud ? `${icon('cloud', 16)} Your planner is saved privately to your Claude account, so it follows you to other devices. Nobody else who opens this page can see it.` : `${icon('device', 16)} Your planner is saved in this browser only. Clearing your browser data removes it, so download a backup now and then. A backup also moves your planner to another browser or device.`}</div>
+    const u = AUTH.user;
+    const account = u
+      ? `<div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc(initials(u.name || u.email))}</span><span class="acct-t"><b>${esc(u.name || 'Signed in')}</b><small>${esc(u.email)}</small></span><button type="button" class="btn btn-secondary btn-sm" data-act="sign-out"><span>Sign out</span></button></div>
+         <div class="note">${icon('cloud', 16)} ${AUTH.status === 'synced' ? 'Your planner is saved to your Google account and syncs across your devices. Only you can see it.' : `${storageLabel()}. Your changes are kept on this device and saved to your account when the connection is back.`}</div>`
+      : AUTH.configured && !AUTH.loadError
+        ? `<div class="note">${icon('device', 16)} You are using Mind Bucket as a guest, so your planner is saved in this browser only. Sign in with Google to keep it in your account and use it on any device.</div>
+           <button type="button" class="btn btn-primary btn-block" data-act="sign-in">${icon('user')}Continue with Google</button>`
+        : `<div class="note">${icon('device', 16)} Your planner is saved in this browser only. Clearing your browser data removes it, so download a backup now and then. A backup also moves your planner to another browser or device.</div>`;
+    html = `<div class="mbody">${u ? mhead('Account & settings') : mhead('Guest settings', 'No account needed. You are using Mind Bucket as a guest.')}
+      ${account}
       <div class="field"><span>Appearance</span>${seg('set-theme', [['light','Light'],['dark','Dark'],['system','Match my device']], THEME)}</div>
       <div class="two">${field('Week starts on', `<select data-change="set-week" id="f-sweek">${[[6,'Saturday'],[0,'Sunday'],[1,'Monday']].map(([v, l]) => `<option value="${v}" ${Number(S.settings.weekStart) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
       <div class="two">${field('Day starts', `<select data-change="set-start" id="f-sstart">${hourOpt(S.settings.dayStart, 4, 10)}</select>`)}${field('Day ends', `<select data-change="set-end" id="f-send">${hourOpt(S.settings.dayEnd, 18, 24)}</select>`)}</div></div>
       <section class="field"><span>Backup</span><textarea id="f-export" readonly rows="3" aria-label="Backup data">${esc(JSON.stringify(S))}</textarea><div class="tpl"><button type="button" class="btn btn-secondary btn-sm" data-act="download-export">Download backup file</button><button type="button" class="btn btn-ghost btn-sm" data-act="copy-export">Copy as text</button></div></section>
       <form data-form="import" style="padding:0;gap:8px"><label class="field"><span>Restore from a backup</span><textarea name="json" id="f-import" rows="3" placeholder="Paste a backup here"></textarea></label><p class="err" aria-live="polite"></p><div class="tpl"><label class="btn btn-ghost btn-sm" style="cursor:pointer">Open a backup file<input type="file" id="f-import-file" accept="application/json,.json" data-change="import-file" hidden></label><button type="submit" class="btn btn-secondary btn-sm">Restore</button></div></form>
-      <div class="mfoot"><div class="tpl"><button type="button" class="btn btn-ghost btn-sm" data-act="load-sample">Load the sample week</button><button type="button" class="btn btn-ghost btn-sm" data-act="clear-all">${icon('trash', 16)}<span>Clear everything</span></button></div><div class="r"><button type="button" class="btn btn-primary" data-act="close-modal">Done</button></div></div></div>`;
+      <div class="mfoot"><div class="tpl"><button type="button" class="btn btn-ghost btn-sm" data-act="load-sample">Load the sample week</button><button type="button" class="btn btn-ghost btn-sm" data-act="clear-all">${icon('trash', 16)}<span>Clear everything</span></button>${u ? `<button type="button" class="btn btn-ghost btn-sm" data-act="delete-cloud">${icon('trash', 16)}<span>Delete my account data</span></button>` : ''}</div><div class="r"><button type="button" class="btn btn-primary" data-act="close-modal">Done</button></div></div></div>`;
   }
   root.innerHTML = `<div class="overlay" data-act="overlay"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
 }
@@ -1247,8 +1411,13 @@ function act(a, el, e) {
     case 'nav': go(el.dataset.view); break;
     case 'settings': openModal({ type:'settings' }); break;
     case 'toggle-theme': setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark'); break;
+    case 'sign-in': signIn(); break;
+    case 'sign-out': if ((AUTH.status === 'offline' || AUTH.status === 'error' || AUTH.writing) && !armed(el, 'Not synced yet. Tap again to sign out')) break; closeModal(); signOut(); break;
+    case 'delete-cloud': if (!armed(el, 'Tap again to delete it for good')) break; deleteCloudData(); break;
+    case 'migrate-move': { const g = loadLocal(LS_KEY) || S; S = g; S.sample = false; AUTH.sIsUser = true; lsDel(LS_KEY); UI.modal = null; renderModal(); save(); render(); toast('Your planner is now in your account'); break; }
+    case 'migrate-fresh': S = sample(); AUTH.sIsUser = true; persistLocal(); UI.modal = null; renderModal(); AUTH.status = 'synced'; render(); toast('Signed in. Your guest planner stays in this browser.'); break;
     case 'set-theme': setTheme(el.dataset.v); break;
-    case 'overlay': if (e.target === el) closeModal(); break;
+    case 'overlay': if (e.target === el && !(UI.modal && UI.modal.type === 'welcome')) closeModal(); break;
     case 'close-modal': closeModal(); break;
     case 'keep-sample': commit(() => { S.sample = false; }); break;
     case 'start-fresh': S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); render(); toast('Clean slate. Start by adding your buckets.'); break;
@@ -1305,7 +1474,7 @@ function act(a, el, e) {
         setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Backup downloaded');
       } catch (err) { toast('Download failed. Use Copy as text instead.'); }
       break; }
-    case 'load-sample': if (!armed(el, 'Tap again to replace your data')) break; S = sample(); S.updatedAt = Date.now(); UI.ideaSel = null; UI.planSel = null; persistLocal(); closeModal(); render(); toast('Sample week loaded'); break;
+    case 'load-sample': if (!armed(el, 'Tap again to replace your data')) break; S = sample(); S.updatedAt = Date.now(); UI.ideaSel = null; UI.planSel = null; persistLocal(); cloudQueue(); closeModal(); render(); toast('Sample week loaded'); break;
     case 'clear-all': if (!armed(el, 'Tap again to clear everything')) break; S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); closeModal(); render(); toast('Everything cleared'); break;
   }
 }
@@ -1423,7 +1592,7 @@ document.addEventListener('click', e => {
   act(el.dataset.act, el, e);
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && UI.modal) { closeModal(); return; }
+  if (e.key === 'Escape' && UI.modal) { if (UI.modal.type !== 'welcome') closeModal(); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); act(e.target.dataset.act, e.target, e); }
 });
 document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); submit(f.dataset.form, f, e); });
@@ -1456,10 +1625,15 @@ setInterval(() => {
 }, 60000);
 
 /* ---------------- boot ---------------- */
-S = loadLocal() || sample();
+{
+  const lastUid = window.MB_FIREBASE && window.MB_FIREBASE.apiKey ? lsGet(LAST_UID_KEY) : null;
+  const cached = lastUid ? loadLocal(userKey(lastUid)) : null;
+  if (cached) { S = cached; BOOT_UID = lastUid; } else S = loadLocal(LS_KEY) || sample();
+}
 const hv = location.hash.slice(1); if (VIEWS.some(v => v.id === hv)) UI.view = hv;
 renderDock();
 render();
+initAuth();
 })();
 </script>
 </body>
