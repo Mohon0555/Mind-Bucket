@@ -376,6 +376,23 @@ button.agenda{border:0;text-align:left;width:100%}
 .switch[aria-pressed="true"] .k::after{transform:translateX(16px)}
 .switch small{display:block;font-size:12px;color:var(--ink-3)}
 
+/* bucket list */
+.goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+article.goal{cursor:pointer}
+.goal .cover .icirc{color:var(--t-fg)}
+.goal.is-done .cover .icirc{background:var(--accent);color:var(--on-accent)}
+.goal-name{border:0;background:none;padding:0;text-align:left;color:var(--ink);cursor:pointer;overflow-wrap:anywhere}
+.goal .meta{min-width:0}
+.goal .meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.goal .foot .check{width:28px;height:28px}
+.sugg{display:flex;flex-direction:column;gap:10px}
+.sugg .tpl button{display:inline-flex;align-items:center;gap:6px}
+.lifebar{height:10px;border-radius:5px;background:var(--muted);overflow:hidden}
+.lifebar i{display:block;height:100%;border-radius:5px;background:var(--accent)}
+.row.as-btn{border:0;width:100%;text-align:left;cursor:pointer;color:var(--ink)}
+.row.as-btn:hover{box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.row.as-btn > svg{color:var(--ink-3)}
+
 /* dock */
 .dock{position:fixed;z-index:30;bottom:calc(16px + env(safe-area-inset-bottom, 0px));left:calc((100vw - 368px) / 2);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px;border-radius:999px;background:var(--frame);box-shadow:var(--shadow-md);border:1px solid var(--frame-hover)}
 .dock button{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--t-ac);color:var(--t-fg)}
@@ -445,9 +462,14 @@ fieldset.field{border:0;padding:0;margin:0}
 }
 @media (max-width: 640px){
   .top{padding-inline:0;gap:8px}
-  .nav{gap:0}
-  .nav button{padding:0 8px;height:36px}
-  .who .avatar{display:none}
+  .top{height:auto;flex-wrap:wrap;row-gap:6px;padding:8px 0 10px}
+  .logo .name{display:inline}
+  .nav{order:3;flex:1 0 100%;justify-content:space-between;gap:4px}
+  .nav button{flex:1 1 0;justify-content:center;padding:0;height:40px;min-width:0}
+  .nav button[aria-current="page"]{background:var(--frame-hover)}
+  .seg{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  .seg button{padding:0 10px}
   .shell{border-radius:20px 20px 0 0}
   .main{padding:20px 16px 12px;gap:20px}
   .panel{padding:8px 16px 112px}
@@ -462,8 +484,10 @@ fieldset.field{border:0;padding:0;margin:0}
   .overlay{align-items:flex-end;padding:0}
   .modal{border-radius:24px 24px 0 0;max-height:92%}
 }
+@media (max-width: 420px){
+  .logo .name{display:none}
+}
 @media (max-width: 400px){
-  .nav button{padding:0 6px}
   .status{padding:0 8px}
 }
 </style>
@@ -491,13 +515,24 @@ const IDEA_STATUS = { new:{label:'New', tone:'butter'}, planned:{label:'Planned'
 const LEVELS = { focus:{label:'Focus', tone:'lavender'}, maintain:{label:'Maintain', tone:'mint'}, parked:{label:'Parked', tone:'slate'} };
 const PLAN_STATUS = { idea:{label:'Idea', tone:'slate'}, planning:{label:'Planning', tone:'lavender'}, booked:{label:'Booked', tone:'mint'}, done:{label:'Done', tone:'slate'} };
 const INTEREST_ICONS = ['music','palette','bike','ball','utensils','languages','book','camera','sun','star','briefcase','map'];
+const GOAL_CATS = {
+  adventure:{ label:'Adventure', tone:'rose', icon:'mountain' },
+  water:{ label:'Water', tone:'sky', icon:'wave' },
+  travel:{ label:'Travel', tone:'mint', icon:'globe' },
+  learn:{ label:'Learn', tone:'lavender', icon:'book' },
+  experience:{ label:'Experience', tone:'butter', icon:'sparkle' },
+  milestone:{ label:'Milestone', tone:'slate', icon:'flag' }
+};
+const GOAL_STATUS = { dream:{ label:'Dream', tone:'lavender' }, planning:{ label:'Planning', tone:'sky' }, done:{ label:'Done', tone:'mint' } };
+const GOAL_SUGGESTIONS = [['Scuba diving','water'],['Paragliding','adventure'],['Bungee jump','adventure'],['Skydiving','adventure'],['Hot air balloon ride','experience'],['See the Northern Lights','experience'],['Surfing lesson','water'],['Trek to Everest Base Camp','adventure'],['Run a marathon','milestone'],['Learn to swim','water'],['Camp under the stars','experience'],['Visit the Sundarbans','travel'],['Snorkel on a coral reef','water'],['Ride a zip line','adventure'],['Learn a new language','learn']];
 const VIEWS = [
   { id:'calendar', label:'Calendar', icon:'calendar' },
   { id:'interests', label:'Interests', icon:'star' },
   { id:'todo', label:'To-do', icon:'checksq' },
   { id:'purchases', label:'Purchases', icon:'bag' },
   { id:'ideas', label:'Ideas', icon:'idea' },
-  { id:'plans', label:'Plans', icon:'map' }
+  { id:'plans', label:'Plans', icon:'map' },
+  { id:'bucketlist', label:'Bucket list', icon:'flag' }
 ];
 const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAY_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -548,7 +583,12 @@ const ICONS = {
   device:'<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  moon:'<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>'
+  moon:'<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>',
+  flag:'<path d="M5 21V4"/><path d="M5 4h12.5l-2.5 4.5 2.5 4.5H5"/>',
+  mountain:'<path d="M2.5 20 9 8.5l4 7 2.5-4L21.5 20z"/><path d="m7.2 11.7 1.8 1.3 1.7-1.4"/>',
+  wave:'<path d="M2 7.5c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M2 12.5c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M2 17.5c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9S9.6 5.5 12 3z"/>',
+  sparkle:'<path d="M11 3.5 12.9 9l5.6 2-5.6 2L11 18.5 9.1 13 3.5 11l5.6-2z"/><path d="M19 3v4M17 5h4"/>'
 };
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 
@@ -586,7 +626,33 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 /* ---------------- data ---------------- */
 function emptyState(settings) {
   return { version:1, sample:false, updatedAt:Date.now(), settings: settings || { weekStart:6, dayStart:7, dayEnd:23 },
-    buckets:[], interests:[], sessions:[], todos:[], purchases:[], ideas:[], plans:[] };
+    buckets:[], interests:[], sessions:[], todos:[], purchases:[], ideas:[], plans:[], bucketList:[] };
+}
+function newGoal(title, cat) {
+  return { id:uid(), title, cat: GOAL_CATS[cat] ? cat : guessCat(title), status:'dream', target:'', place:'', cost:0, note:'', memory:'', doneAt:null, planId:null, createdAt:Date.now() };
+}
+function guessCat(t) {
+  t = String(t || '').toLowerCase();
+  if (/scuba|\bdiv(e|es|ing)\b|snorkel|\bsurf|\bswim|kayak|\braft|\bsail|jet ?ski|\bboat|ocean|\breef|whale/.test(t)) return 'water';
+  if (/paraglid|bungee|sky ?div|climb|\btrek|\bhik(e|ing)|zip ?line|mountain|base camp|abseil|rappel|cliff|\bcave/.test(t)) return 'adventure';
+  if (/learn|course|language|\bstudy|degree|piano|guitar|violin|\bcook|\bpaint|\bcode|\bdance/.test(t)) return 'learn';
+  if (/marathon|\brun a\b|write a book|publish|start a business|\blaunch|buy a (house|home|car|flat)|\bown a\b|graduat|donate|volunteer/.test(t)) return 'milestone';
+  if (/visit|travel|\btrip|\btour|countr|city|go to|road ?trip|backpack|island|sundarbans|safari/.test(t)) return 'travel';
+  return 'experience';
+}
+function sampleGoals(t, sajek) {
+  const y = t.getFullYear();
+  const g = (title, cat, status, target, place, cost, note, extra) => Object.assign(newGoal(title, cat), { status, target: target ? String(target) : '', place, cost, note }, extra || {});
+  return [
+    g('Scuba diving','water','planning',y + 1,'Saint Martin’s Island',15000,'A beginner course first, then a dive on the coral reef.'),
+    g('Paragliding','adventure','dream',y + 1,'Pokhara, Nepal',12000,'Tandem flight over Phewa Lake.'),
+    g('Bungee jump','adventure','dream','','Nepal',9000,'Go with friends who will film it.'),
+    g('Sunrise at Sajek Valley','travel','planning',sajek && sajek.start ? sajek.start.slice(0, 4) : y,'Rangamati',10000,'Watch the clouds roll in below the hills.', { planId: sajek ? sajek.id : null }),
+    g('Run a half marathon','milestone','planning',y + 1,'Dhaka',2000,'Train three mornings a week.'),
+    g('See the Northern Lights','experience','dream','','Tromsø, Norway',250000,'A winter trip, when the nights are long.'),
+    g('Skydiving','adventure','dream','','',0,''),
+    g('Learn to swim','water','done','','Dhaka',3000,'', { memory:'Twelve lessons at the club pool. I can swim two lengths now.', doneAt: ymd(addDays(t, -120)) })
+  ];
 }
 function sample() {
   const t = today0();
@@ -656,12 +722,18 @@ function sample() {
     { id:uid(), title:'Sajek Valley', place:'Rangamati', tone:'mint', start:ymd(s3), end:ymd(addDays(s3, 3)), budget:10000, pause:false, status:'idea',
       days:[], checklist:[ck('Find a group to join')] }
   ];
-  return { version:1, sample:true, updatedAt:0, settings:{ weekStart:6, dayStart:7, dayEnd:23 }, buckets, interests, sessions, todos, purchases, ideas, plans };
+  const bucketList = sampleGoals(t, plans[2]);
+  plans[2].goalId = bucketList[3].id;
+  todos.push({ id:mk('t8'), title:'Find a beginner scuba course', tag:'General', due:null, done:false, doneAt:null, createdAt:now, goalId:bucketList[0].id });
+  return { version:1, sample:true, updatedAt:0, settings:{ weekStart:6, dayStart:7, dayEnd:23 }, buckets, interests, sessions, todos, purchases, ideas, plans, bucketList };
 }
 function migrate(d) {
   if (!d || typeof d !== 'object') return sample();
   const out = emptyState();
-  for (const k of ['buckets','interests','sessions','todos','purchases','ideas','plans']) out[k] = Array.isArray(d[k]) ? d[k] : [];
+  for (const k of ['buckets','interests','sessions','todos','purchases','ideas','plans','bucketList']) out[k] = Array.isArray(d[k]) ? d[k] : [];
+  if (d.sample && !Array.isArray(d.bucketList)) out.bucketList = sampleGoals(today0(), out.plans.find(p => /sajek/i.test(p.title || '')));
+  out.bucketList = out.bucketList.filter(x => x && typeof x === 'object');
+  out.bucketList.forEach(x => { x.title = String(x.title || 'Untitled'); if (!GOAL_CATS[x.cat]) x.cat = 'experience'; if (!GOAL_STATUS[x.status]) x.status = 'dream'; });
   out.settings = Object.assign({ weekStart:6, dayStart:7, dayEnd:23 }, d.settings || {});
   out.sample = !!d.sample; out.updatedAt = Number(d.updatedAt) || 0; out.version = 1;
   out.plans.forEach(p => { p.days = Array.isArray(p.days) ? p.days : []; p.checklist = Array.isArray(p.checklist) ? p.checklist : []; });
@@ -716,7 +788,7 @@ function onUser(u) {
   if (!u) {
     const wasShowingUser = !!AUTH.user || !!BOOT_UID;
     AUTH.user = null; AUTH.sIsUser = false; AUTH.status = 'guest'; BOOT_UID = null; lsDel(LAST_UID_KEY);
-    if (wasShowingUser) { S = loadLocal(LS_KEY) || sample(); UI.ideaSel = null; UI.planSel = null; if (UI.modal && UI.modal.type === 'welcome') UI.modal = null; render(); }
+    if (wasShowingUser) { S = loadLocal(LS_KEY) || sample(); UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; if (UI.modal && UI.modal.type === 'welcome') UI.modal = null; render(); }
     else renderTop();
     return;
   }
@@ -745,7 +817,7 @@ function onUser(u) {
 function firstSignIn() {
   if (AUTH.sIsUser) { if (S.updatedAt) cloudQueue(); AUTH.status = 'synced'; renderTop(); return; }
   const g = loadLocal(LS_KEY);
-  const hasGuestData = g && !g.sample && ['buckets','interests','todos','purchases','ideas','plans'].some(k => g[k].length);
+  const hasGuestData = g && !g.sample && ['buckets','interests','todos','purchases','ideas','plans','bucketList'].some(k => g[k].length);
   if (hasGuestData) { S = g; AUTH.status = 'choose'; render(); openModal({ type:'welcome' }); return; }
   S = sample(); AUTH.sIsUser = true; persistLocal(); AUTH.status = 'synced'; render();
   toast(`Signed in as ${AUTH.user.email || AUTH.user.name}`);
@@ -810,7 +882,7 @@ let BOOT_UID = null;
 const UI = {
   view:'calendar', calMode: (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) ? 'day' : 'week',
   weekOffset:0, dayOffset:0, iFilter:'all', tFilter:'all', pFilter:'all', ideaQuery:'', showDropped:false,
-  ideaSel:null, planSel:null, modal:null, todoWhen:'today', pendingRender:false
+  ideaSel:null, planSel:null, modal:null, todoWhen:'today', pendingRender:false, gFilter:'all', goalSel:null
 };
 let DRAG = null;
 
@@ -1119,6 +1191,7 @@ function todoRow(x) {
   else if (x.due) meta = fmtDay(parseYmd(x.due));
   else meta = 'Someday';
   if (b && st !== 'done') meta += ` · ${b.name} ${fmtTime(toMin(b.start))}`;
+  const gl = x.goalId && byId(S.bucketList, x.goalId); if (gl) meta += ` · Bucket list: ${gl.title}`;
   const late = st !== 'done' && x.due && x.due < k;
   return `<div class="row${st === 'done' ? ' is-done' : ''}" ${st === 'done' ? '' : `draggable="true" data-drag="todo" data-id="${x.id}"`}>
     <button class="check${x.done ? ' on' : ''}" data-act="toggle-todo" data-id="${x.id}" aria-label="${x.done ? 'Mark not done' : 'Mark done'}: ${esc(x.title)}">${icon('check', 14)}</button>
@@ -1256,6 +1329,84 @@ function panelPlans() {
       <form class="field-inline" data-form="check-add" data-id="${p.id}">${icon('plus', 18)}<input type="text" id="check-add-${p.id}" name="text" placeholder="Add to the checklist" aria-label="Checklist item" autocomplete="off"><button class="btn btn-secondary btn-sm" type="submit">Add</button></form></section>`;
 }
 
+/* ---------------- view: bucket list ---------------- */
+const goalCat = x => GOAL_CATS[x.cat] || GOAL_CATS.experience;
+const goalSteps = x => S.todos.filter(t => t.goalId === x.id);
+function goalWhen(x) {
+  if (x.status === 'done') { if (!x.doneAt) return 'Done'; const d = parseYmd(x.doneAt); return `Done · ${MON_SHORT[d.getMonth()]} ${d.getFullYear()}`; }
+  return x.target ? String(x.target) : 'Someday';
+}
+function goalSort(a, b) {
+  if (a.status === 'done' && b.status === 'done') return String(b.doneAt || '').localeCompare(String(a.doneAt || ''));
+  return String(a.target || '9999').localeCompare(String(b.target || '9999')) || (b.createdAt || 0) - (a.createdAt || 0);
+}
+function viewGoals() {
+  const all = S.bucketList; const n = st => all.filter(x => x.status === st).length; const f = UI.gFilter;
+  const controls = seg('g-filter', [['all','All'],['dream','Dreams',n('dream')],['planning','Planning',n('planning')],['done','Done',n('done')]], f)
+    + `<button class="btn btn-primary" data-act="quick" data-type="goal">${icon('plus')}Add</button>`;
+  const cap = `<form class="card capture" data-form="goal-capture">${icon('flag', 20)}<input type="text" id="cap-goal" name="title" maxlength="80" placeholder="Something to do once in your life… e.g. Scuba diving" autocomplete="off" aria-label="New bucket list item">
+    <select name="cat" id="cap-goal-cat" aria-label="Kind"><option value="">Any kind</option>${Object.entries(GOAL_CATS).map(([k, c]) => `<option value="${k}">${c.label}</option>`).join('')}</select><button class="btn btn-primary btn-sm" type="submit">Save</button></form>`;
+  const have = new Set(all.map(x => x.title.trim().toLowerCase()));
+  const sug = GOAL_SUGGESTIONS.filter(([t]) => !have.has(t.toLowerCase())).slice(0, 8);
+  const sugg = sug.length && f !== 'done' ? `<div class="sugg"><span class="overline">Tap to add</span><div class="tpl">${sug.map(([t, c]) => `<button type="button" class="t-${GOAL_CATS[c].tone}" data-act="goal-suggest" data-title="${esc(t)}" data-cat="${c}">${icon('plus', 14)}${esc(t)}</button>`).join('')}</div></div>` : '';
+  const sec = (st, label, empty) => {
+    const arr = all.filter(x => x.status === st).sort(goalSort);
+    if (f === 'all' && !arr.length) return '';
+    return `<section class="list"><div class="list-head"><h3>${label}</h3><span>${arr.length}</span></div>${arr.length ? `<div class="goals">${arr.map(goalCard).join('')}</div>` : `<div class="list-empty">${empty}</div>`}</section>`;
+  };
+  const body = !all.length
+    ? `<div class="card empty"><h2>What do you want to do at least once?</h2><p class="muted">Scuba diving, paragliding, a bungee jump… Add the big experiences you dream about, give each one a year, and turn it into a plan when you are ready.</p></div>`
+    : (f === 'all' || f === 'planning' ? sec('planning', 'Planning', 'Nothing in planning yet. Pick a dream and add a first step.') : '')
+      + (f === 'all' || f === 'dream' ? sec('dream', 'Dreams', 'No dreams waiting. Add one above.') : '')
+      + (f === 'all' || f === 'done' ? sec('done', 'Done', 'Nothing ticked off yet. Your first one lands here.') : '');
+  const over = all.length ? `${n('done')} of ${all.length} done · ${n('planning')} in planning` : 'Things to do once in your life';
+  return head(over, 'Bucket list', controls) + banner() + (all.length ? cap + sugg + body : body + cap + sugg);
+}
+function goalCard(x) {
+  const c = goalCat(x); const st = GOAL_STATUS[x.status] || GOAL_STATUS.dream; const sel = UI.goalSel === x.id; const done = x.status === 'done';
+  const meta = [x.place, x.cost ? money(x.cost) : ''].filter(Boolean).join(' · ') || c.label;
+  return `<article class="card plan goal${sel ? ' sel' : ''}${done ? ' is-done' : ''}" data-act="select-goal" data-id="${x.id}">
+    <span class="cover t-${c.tone}"><span class="icirc lg">${icon(done ? 'check' : c.icon, 20)}</span><span class="datepill">${esc(goalWhen(x))}</span></span>
+    <span class="t"><button type="button" class="goal-name h2" data-act="select-goal" data-id="${x.id}" aria-pressed="${sel}">${esc(x.title)}</button><span class="meta">${icon(x.place ? 'pin' : c.icon, 14)}<span>${esc(meta)}</span></span></span>
+    <span class="foot"><span class="chip ${sel ? 'dark' : 't-' + st.tone}">${st.label}</span><button type="button" class="check${done ? ' on' : ''}" data-act="goal-toggle-done" data-id="${x.id}" aria-label="${done ? 'Mark not done' : 'Mark done'}: ${esc(x.title)}" title="${done ? 'Mark not done' : 'Mark done'}">${icon('check', 14)}</button></span>
+  </article>`;
+}
+function panelGoals() {
+  const x = UI.goalSel && byId(S.bucketList, UI.goalSel);
+  if (!x) {
+    const all = S.bucketList; const done = all.filter(g => g.status === 'done').length; const open = all.filter(g => g.status !== 'done');
+    const cost = open.reduce((a, g) => a + (Number(g.cost) || 0), 0);
+    const pct = all.length ? Math.round(done / all.length * 100) : 0;
+    const cats = Object.entries(GOAL_CATS).map(([k, c]) => ({ c, total: all.filter(g => g.cat === k).length, done: all.filter(g => g.cat === k && g.status === 'done').length })).filter(r => r.total);
+    const max = Math.max(1, ...cats.map(r => r.total));
+    const next = open.filter(g => g.target).sort(goalSort).slice(0, 3);
+    return `<div class="phead"><h2>Your life list</h2><span>${pct}% done</span></div>
+      <div class="lifebar" role="img" aria-label="${done} of ${all.length} done"><i style="width:${pct}%"></i></div>
+      <div class="stats">${stat('mint', done, 'Done')}${stat('lavender', open.length, 'To go')}${stat('outline', cost ? kfmt(cost) : '–', 'BDT to go')}</div>
+      ${next.length ? `<section><span class="overline">Next up</span>${next.map(g => { const c = goalCat(g); return `<button type="button" class="row as-btn" data-act="select-goal" data-id="${g.id}"><span class="icirc t-${c.tone}">${icon(c.icon, 16)}</span><span class="rt"><b>${esc(g.title)}</b><small>${esc(goalWhen(g))} · ${(GOAL_STATUS[g.status] || GOAL_STATUS.dream).label}</small></span>${icon('chevR', 16)}</button>`; }).join('')}</section>` : ''}
+      ${cats.length ? `<section><span class="overline">By kind · done / total</span><div class="bal">${cats.map(r => `<div class="bal-row t-${r.c.tone}"><span>${r.c.label}</span><span class="bal-track"><i class="pl" style="width:${r.total / max * 100}%"></i><i class="dn" style="width:${r.done / max * 100}%"></i></span><span class="v">${r.done} / ${r.total}</span></div>`).join('')}</div></section>` : ''}
+      <div class="agenda t-rose"><div class="agenda-head"><span class="l">${icon('flag', 16)}<span>From someday to a date</span></span><small>Tip</small></div><div class="agenda-body">Give each dream a year and one small first step. Steps go to your to-do list, so you can drop them into a bucket like any other task.</div></div>`;
+  }
+  const c = goalCat(x); const done = x.status === 'done';
+  const steps = goalSteps(x); const sd = steps.filter(t => t.done).length;
+  const plan = x.planId && byId(S.plans, x.planId);
+  const notes = [x.place ? `<span class="line">${icon('pin', 14)}<span>${esc(x.place)}</span></span>` : '', x.note ? `<span>${esc(x.note)}</span>` : ''].filter(Boolean).join('');
+  return `<div class="phead"><h2>${esc(x.title)}</h2><button class="icon-btn sm ghost" data-act="close-goal" aria-label="Close">${icon('x', 16)}</button></div>
+    <div class="agenda t-${c.tone}"><div class="agenda-head"><span class="l">${icon(c.icon, 16)}<span>${c.label}</span></span><small>${esc(goalWhen(x))}</small></div><div class="agenda-body">${notes || `<span class="faint">No details yet. Tap Edit to add where, a rough cost or why you want it.</span>`}</div></div>
+    <div class="stats">${done ? stat(c.tone === 'slate' ? 'sky' : c.tone, x.doneAt ? x.doneAt.slice(0, 4) : '–', 'Done in') : stat(c.tone === 'slate' ? 'sky' : c.tone, x.target || '–', 'Target year')}${stat('butter', x.cost ? kfmt(x.cost) : '–', 'Cost · BDT')}${stat('outline', steps.length ? `${sd}/${steps.length}` : '0', 'Steps done')}</div>
+    <section><span class="overline">Status</span><div class="tpl">${Object.entries(GOAL_STATUS).map(([k, v]) => `<button type="button" class="chip${x.status === k ? ' dark' : ''}" data-act="goal-status" data-id="${x.id}" data-v="${k}" aria-pressed="${x.status === k}">${v.label}</button>`).join('')}</div></section>
+    ${done ? `<section><span class="overline">How was it?</span>
+      <label class="field"><span>Done on</span><input type="date" id="g-done-${x.id}" data-change="goal-done-date" data-id="${x.id}" value="${esc(x.doneAt || '')}" max="${ymd(today0())}"></label>
+      <label class="field"><span>Memory</span><textarea id="g-mem-${x.id}" data-change="goal-memory" data-id="${x.id}" maxlength="500" placeholder="Who was there, how it felt, what you would do next time">${esc(x.memory || '')}</textarea></label></section>` : ''}
+    ${!done || steps.length ? `<section><span class="overline">Steps</span>
+      ${steps.map(t => `<div class="row"><button class="check${t.done ? ' on' : ''}" data-act="toggle-todo" data-id="${t.id}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${icon('check', 14)}</button><div class="rt"><b style="${t.done ? 'text-decoration:line-through;color:var(--ink-3)' : ''}">${esc(t.title)}</b><small>${t.done ? 'Done' : t.due ? fmtDay(parseYmd(t.due)) : 'To-do · Later'}</small></div>${t.done ? '' : `<button class="icon-btn sm bare" data-act="schedule" data-kind="todo" data-id="${t.id}" aria-label="Give ${esc(t.title)} a time">${icon('calendar', 16)}</button>`}</div>`).join('')}
+      ${done ? '' : `<form class="field-inline" data-form="goal-step" data-id="${x.id}">${icon('plus', 18)}<input type="text" id="g-step-${x.id}" name="text" maxlength="120" placeholder="Add a step, e.g. Book a beginner course" aria-label="New step" autocomplete="off"><button class="btn btn-secondary btn-sm" type="submit">Add</button></form>
+      <span class="muted">Steps also show up in your to-do list.</span>`}</section>` : ''}
+    ${plan ? `<section><span class="overline">Plan</span><button class="btn btn-secondary btn-block" data-act="goto-plan" data-id="${plan.id}">${icon('plane')}Open plan · ${esc(plan.title)}</button></section>`
+      : done ? '' : `<section><span class="overline">Make it happen</span><button class="btn btn-primary btn-block" data-act="goal-plan" data-id="${x.id}">${icon('calendar')}Make a plan with dates</button><span class="muted">Adds it to Tours & plans with dates, a day-by-day outline and a checklist.</span></section>`}
+    <section><div class="tpl"><button class="btn btn-ghost btn-sm" data-act="edit-goal" data-id="${x.id}">${icon('edit', 16)}Edit</button><button class="btn btn-ghost btn-sm" data-act="delete-goal" data-id="${x.id}">${icon('trash', 16)}<span>Delete</span></button></div></section>`;
+}
+
 /* ---------------- modals ---------------- */
 function mhead(title, sub) { return `<div class="mhead"><div><h2>${title}</h2>${sub ? `<p class="muted">${sub}</p>` : ''}</div><button type="button" class="icon-btn sm ghost" data-act="close-modal" aria-label="Close">${icon('x', 16)}</button></div>`; }
 const field = (label, inner) => `<label class="field"><span>${label}</span>${inner}</label>`;
@@ -1346,9 +1497,23 @@ function renderModal() {
       ${field('Status', `<select name="status" id="f-lstatus">${Object.entries(PLAN_STATUS).map(([k, v]) => `<option value="${k}" ${p.status === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select>`)}</div>
       <label class="field" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" name="pause" id="f-lpause" ${p.pause ? 'checked' : ''}><span style="font-size:14px;color:var(--ink)">Pause my buckets during this plan</span></label>
       ${toneOpts('tone', p.tone)}${foot(m.id ? delBtn('delete-plan', m.id) : '', m.id ? 'Save plan' : 'Add plan')}</form>`;
+  } else if (m.type === 'goal') {
+    const x = m.id ? byId(S.bucketList, m.id) : { title:'', cat:'', status:'dream', target:'', place:'', cost:0, note:'' };
+    if (!x) { UI.modal = null; root.innerHTML = ''; return; }
+    const y = today0().getFullYear(); const years = Array.from({ length:11 }, (_, i) => String(y + i));
+    if (x.target && !years.includes(String(x.target))) years.unshift(String(x.target));
+    html = `<form data-form="goal">${mhead(m.id ? 'Edit bucket list item' : 'Add to your bucket list', 'Something you want to do at least once in your life.')}
+      ${field('What do you want to do?', `<input name="title" id="f-gtitle" required maxlength="80" value="${esc(x.title)}" placeholder="e.g. Scuba diving">`)}
+      <fieldset class="field"><legend>Kind${m.id ? '' : ' (we guess it if you skip this)'}</legend><div class="opts">${Object.entries(GOAL_CATS).map(([k, c]) => `<label><input type="radio" name="cat" value="${k}" ${x.cat === k ? 'checked' : ''}><span class="o">${icon(c.icon, 16)}${c.label}</span></label>`).join('')}</div></fieldset>
+      <div class="two">${field('Target year', `<select name="target" id="f-gtarget"><option value="" ${!x.target ? 'selected' : ''}>Someday</option>${years.map(v => `<option value="${v}" ${String(x.target) === v ? 'selected' : ''}>${v}</option>`).join('')}</select>`)}
+      ${field('Status', `<select name="status" id="f-gstatus">${Object.entries(GOAL_STATUS).map(([k, v]) => `<option value="${k}" ${x.status === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select>`)}</div>
+      <div class="two">${field('Where', `<input name="place" id="f-gplace" maxlength="60" value="${esc(x.place)}" placeholder="e.g. Pokhara, Nepal">`)}
+      ${field('Rough cost (BDT)', `<input type="number" name="cost" id="f-gcost" min="0" step="100" inputmode="numeric" value="${x.cost ? esc(x.cost) : ''}" placeholder="0">`)}</div>
+      ${field('Note', `<textarea name="note" id="f-gnote" maxlength="300" placeholder="Why you want it, who to go with, what you need first">${esc(x.note)}</textarea>`)}
+      ${foot(m.id ? delBtn('delete-goal', m.id) : '', m.id ? 'Save' : 'Add to list')}</form>`;
   } else if (m.type === 'chooser') {
     const c = (tone, ic, type, l) => `<button type="button" class="t-${tone}" data-act="quick" data-type="${type}">${icon(ic, 20)}${l}</button>`;
-    html = `<div class="mbody">${mhead('Add something')}<div class="chooser">${c('butter','checksq','todo','To-do')}${c('lavender','star','interest','Interest')}${c('mint','bag','purchase','Purchase')}${c('sky','idea','idea','Idea')}${c('rose','map','plan','Plan')}${c('slate','calendar','bucket','Bucket')}</div></div>`;
+    html = `<div class="mbody">${mhead('Add something')}<div class="chooser">${c('butter','checksq','todo','To-do')}${c('lavender','star','interest','Interest')}${c('mint','bag','purchase','Purchase')}${c('sky','idea','idea','Idea')}${c('rose','map','plan','Plan')}${c('rose','flag','goal','Bucket list')}${c('slate','calendar','bucket','Time bucket')}</div></div>`;
   } else if (m.type === 'welcome') {
     const u = AUTH.user || {};
     html = `<div class="mbody"><div class="mhead"><div><h2>Welcome${u.name ? ', ' + esc(u.name.split(' ')[0]) : ''}</h2><p class="muted">You are signed in as ${esc(u.email || u.name || 'your Google account')}.</p></div></div>
@@ -1391,7 +1556,7 @@ function render() {
   const cs = document.querySelector('.cal-scroll'); const csLeft = cs ? cs.scrollLeft : 0;
   const ae = document.activeElement; const focusId = ae && ae.id; const selStart = ae && 'selectionStart' in ae ? ae.selectionStart : null;
   renderTop();
-  const V = { calendar:[viewCalendar, panelCalendar], interests:[viewInterests, panelInterests], todo:[viewTodo, panelTodo], purchases:[viewPurchases, panelPurchases], ideas:[viewIdeas, panelIdeas], plans:[viewPlans, panelPlans] }[UI.view];
+  const V = { calendar:[viewCalendar, panelCalendar], interests:[viewInterests, panelInterests], todo:[viewTodo, panelTodo], purchases:[viewPurchases, panelPurchases], ideas:[viewIdeas, panelIdeas], plans:[viewPlans, panelPlans], bucketlist:[viewGoals, panelGoals] }[UI.view];
   $('#main').innerHTML = V[0]();
   $('#panel').innerHTML = V[1]();
   for (const sel in keep) { const el = $(sel); if (el) el.scrollTop = keep[sel]; }
@@ -1420,7 +1585,7 @@ function act(a, el, e) {
     case 'overlay': if (e.target === el && !(UI.modal && UI.modal.type === 'welcome')) closeModal(); break;
     case 'close-modal': closeModal(); break;
     case 'keep-sample': commit(() => { S.sample = false; }); break;
-    case 'start-fresh': S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); render(); toast('Clean slate. Start by adding your buckets.'); break;
+    case 'start-fresh': S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; save(); render(); toast('Clean slate. Start by adding your buckets.'); break;
     case 'cal-mode': UI.calMode = el.dataset.v; if (UI.calMode === 'week') { UI.weekOffset = Math.floor(daysBetween(weekDates(0)[0], addDays(today0(), UI.dayOffset)) / 7); } render(); break;
     case 'cal-step': if (UI.calMode === 'week') UI.weekOffset += Number(el.dataset.d); else UI.dayOffset += Number(el.dataset.d); render(); break;
     case 'cal-today': UI.weekOffset = 0; UI.dayOffset = 0; render(); break;
@@ -1435,7 +1600,7 @@ function act(a, el, e) {
     case 'remove-session': commit(() => { S.sessions = S.sessions.filter(s => s.id !== id); }, 'Removed from bucket'); break;
     case 'schedule': e.stopPropagation(); openModal({ type:'schedule', kind: el.dataset.kind, id, date: ymd(today0()) }); break;
     case 'sch-day': UI.modal.date = el.dataset.date; renderModal(); break;
-    case 'quick': { const t = el.dataset.type; const map = { todo:{ type:'todo' }, interest:{ type:'interest' }, purchase:{ type:'purchase', kind: el.dataset.kind }, idea:{ type:'idea' }, plan:{ type:'plan' }, bucket:{ type:'bucket' }, any:{ type:'chooser' } }; openModal(map[t] || { type:'chooser' }); break; }
+    case 'quick': { const t = el.dataset.type; const map = { todo:{ type:'todo' }, interest:{ type:'interest' }, purchase:{ type:'purchase', kind: el.dataset.kind }, idea:{ type:'idea' }, plan:{ type:'plan' }, goal:{ type:'goal' }, bucket:{ type:'bucket' }, any:{ type:'chooser' } }; openModal(map[t] || { type:'chooser' }); break; }
     case 'focus': { const t = document.getElementById(el.dataset.target); if (t) { t.focus(); t.scrollIntoView({ block:'center', behavior:'smooth' }); } break; }
     case 'i-filter': UI.iFilter = el.dataset.v; render(); break;
     case 'edit-interest': openModal({ type:'interest', id }); break;
@@ -1459,7 +1624,20 @@ function act(a, el, e) {
     case 'delete-idea': if (!armed(el)) break; commit(() => { S.ideas = S.ideas.filter(x => x.id !== id); removeRef('idea', id); UI.ideaSel = null; }, 'Idea deleted'); closeModal(); break;
     case 'select-plan': UI.planSel = id; render(); break;
     case 'edit-plan': openModal({ type:'plan', id }); break;
-    case 'delete-plan': if (!armed(el)) break; commit(() => { S.plans = S.plans.filter(x => x.id !== id); UI.planSel = null; }, 'Plan deleted'); closeModal(); break;
+    case 'delete-plan': if (!armed(el)) break; commit(() => { S.plans = S.plans.filter(x => x.id !== id); S.bucketList.forEach(x => { if (x.planId === id) x.planId = null; }); UI.planSel = null; }, 'Plan deleted'); closeModal(); break;
+    case 'g-filter': UI.gFilter = el.dataset.v; render(); break;
+    case 'select-goal': UI.goalSel = UI.goalSel === id ? null : id; render(); if (UI.goalSel && window.matchMedia('(max-width: 1080px)').matches) { const p = $('#panel'); if (p) p.scrollIntoView({ behavior:'smooth' }); } break;
+    case 'close-goal': UI.goalSel = null; render(); break;
+    case 'goal-suggest': { const title = el.dataset.title; commit(() => { S.bucketList.push(newGoal(title, el.dataset.cat)); }, `${title} added to your bucket list`); break; }
+    case 'goal-toggle-done': { const x = byId(S.bucketList, id); if (!x) break; const was = x.status === 'done';
+      commit(() => { if (was) { x.status = (x.planId || goalSteps(x).length) ? 'planning' : 'dream'; x.doneAt = null; } else { x.status = 'done'; x.doneAt = ymd(today0()); UI.goalSel = x.id; } }, was ? `${x.title} is back on your list` : `Ticked off your bucket list: ${x.title}`); break; }
+    case 'goal-status': { const x = byId(S.bucketList, id); if (!x) break; const v = el.dataset.v; if (!GOAL_STATUS[v] || v === x.status) break;
+      commit(() => { x.doneAt = v === 'done' ? ymd(today0()) : null; x.status = v; }, v === 'done' ? `Ticked off your bucket list: ${x.title}` : null); break; }
+    case 'goal-plan': { const x = byId(S.bucketList, id); if (!x) break; const p = { id:uid(), title:x.title, place:x.place || '', tone:goalCat(x).tone, start:'', end:'', budget:Number(x.cost) || 0, pause:true, status:'idea', days:[], checklist:[], goalId:x.id };
+      commit(() => { S.plans.push(p); x.planId = p.id; if (x.status === 'dream') x.status = 'planning'; UI.planSel = p.id; });
+      go('plans'); openModal({ type:'plan', id:p.id }); toast('Plan made. Now pick the dates.'); break; }
+    case 'edit-goal': openModal({ type:'goal', id }); break;
+    case 'delete-goal': if (!armed(el)) break; commit(() => { S.bucketList = S.bucketList.filter(x => x.id !== id); S.todos.forEach(t => { if (t.goalId === id) delete t.goalId; }); S.plans.forEach(p => { if (p.goalId === id) delete p.goalId; }); UI.goalSel = null; }, 'Removed from your bucket list'); closeModal(); break;
     case 'toggle-pause': commit(() => { const p = byId(S.plans, id); if (p) p.pause = !p.pause; }, null); break;
     case 'toggle-check': commit(() => { const p = byId(S.plans, id); const c = p && p.checklist.find(x => x.id === el.dataset.c); if (c) c.done = !c.done; }); break;
     case 'del-check': commit(() => { const p = byId(S.plans, id); if (p) p.checklist = p.checklist.filter(x => x.id !== el.dataset.c); }); break;
@@ -1474,8 +1652,8 @@ function act(a, el, e) {
         setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Backup downloaded');
       } catch (err) { toast('Download failed. Use Copy as text instead.'); }
       break; }
-    case 'load-sample': if (!armed(el, 'Tap again to replace your data')) break; S = sample(); S.updatedAt = Date.now(); UI.ideaSel = null; UI.planSel = null; persistLocal(); cloudQueue(); closeModal(); render(); toast('Sample week loaded'); break;
-    case 'clear-all': if (!armed(el, 'Tap again to clear everything')) break; S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); closeModal(); render(); toast('Everything cleared'); break;
+    case 'load-sample': if (!armed(el, 'Tap again to replace your data')) break; S = sample(); S.updatedAt = Date.now(); UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; persistLocal(); cloudQueue(); closeModal(); render(); toast('Sample week loaded'); break;
+    case 'clear-all': if (!armed(el, 'Tap again to clear everything')) break; S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; save(); closeModal(); render(); toast('Everything cleared'); break;
   }
 }
 function formErr(f, msg) { const p = f.querySelector('.err'); if (p) p.textContent = msg; }
@@ -1557,6 +1735,28 @@ function submit(type, f, e) {
       commit(() => { if (id) Object.assign(byId(S.plans, id), data); else { const p = Object.assign({ id:uid(), days:[], checklist:[] }, data); S.plans.push(p); UI.planSel = p.id; } }, id ? 'Plan saved' : `${title} added`);
       closeModal(); if (!id && UI.view !== 'plans') go('plans'); break;
     }
+    case 'goal': {
+      const title = g('title'); if (!title) return formErr(f, 'Write what you want to do.');
+      const status = GOAL_STATUS[g('status')] ? g('status') : 'dream';
+      const data = { title, cat: GOAL_CATS[g('cat')] ? g('cat') : guessCat(title), status, target: /^\d{4}$/.test(g('target')) ? g('target') : '', place: g('place'), cost: Math.max(0, Math.round(Number(g('cost')) || 0)), note: g('note') };
+      const id = UI.modal.id;
+      commit(() => {
+        if (id) { const x = byId(S.bucketList, id); if (!x) return; data.doneAt = status === 'done' ? (x.status === 'done' && x.doneAt ? x.doneAt : ymd(today0())) : null; Object.assign(x, data); }
+        else { const x = Object.assign(newGoal(title, data.cat), data, { doneAt: status === 'done' ? ymd(today0()) : null }); S.bucketList.push(x); UI.goalSel = x.id; }
+      }, id ? 'Saved' : `${title} added to your bucket list`);
+      closeModal(); if (!id && UI.view !== 'bucketlist') go('bucketlist'); break;
+    }
+    case 'goal-capture': {
+      const title = g('title'); if (!title) return;
+      commit(() => { S.bucketList.push(newGoal(title, g('cat'))); if (UI.gFilter !== 'all' && UI.gFilter !== 'dream') UI.gFilter = 'all'; }, `${title} added to your bucket list`);
+      const inp = document.getElementById('cap-goal'); if (inp) { inp.value = ''; inp.focus(); } break;
+    }
+    case 'goal-step': {
+      const text = g('text'); const gid = f.dataset.id; const x = byId(S.bucketList, gid); if (!text || !x) return;
+      const wasDream = x.status === 'dream';
+      commit(() => { S.todos.push({ id:uid(), title:text, tag:'General', due:null, done:false, doneAt:null, createdAt:Date.now(), goalId:gid }); if (wasDream) x.status = 'planning'; }, wasDream ? 'Step added to your to-dos. Moved to Planning.' : 'Step added to your to-dos');
+      const inp = document.getElementById('g-step-' + gid); if (inp) inp.focus(); break;
+    }
     case 'check-add': {
       const text = g('text'); if (!text) return; const pid = f.dataset.id;
       commit(() => { const p = byId(S.plans, pid); if (p) p.checklist.push({ id:uid(), text, done:false }); });
@@ -1565,7 +1765,7 @@ function submit(type, f, e) {
     case 'import': {
       let obj; try { obj = JSON.parse(g('json')); } catch (err) { return formErr(f, 'That backup could not be read. Paste the whole text you copied.'); }
       if (!obj || !Array.isArray(obj.buckets)) return formErr(f, 'That does not look like a Mind Bucket backup.');
-      S = migrate(obj); S.sample = false; UI.ideaSel = null; UI.planSel = null; save(); closeModal(); render(); toast('Backup restored'); break;
+      S = migrate(obj); S.sample = false; UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; save(); closeModal(); render(); toast('Backup restored'); break;
     }
   }
 }
@@ -1578,6 +1778,8 @@ function change(type, el) {
       rd.onload = () => { const ta = document.getElementById('f-import'); if (ta) { ta.value = String(rd.result || ''); } toast('Backup loaded. Tap Restore to use it.'); };
       rd.onerror = () => toast('That file could not be read.');
       rd.readAsText(file); break; }
+    case 'goal-memory': { const x = byId(S.bucketList, el.dataset.id); if (!x) return; x.memory = el.value.trim().slice(0, 500); save(); break; }
+    case 'goal-done-date': { const x = byId(S.bucketList, el.dataset.id); if (!x) return; const v = el.value; x.doneAt = /^\d{4}-\d{2}-\d{2}$/.test(v) && v <= ymd(today0()) ? v : ymd(today0()); save(); render(); break; }
     case 'set-week': S.settings.weekStart = Number(el.value); UI.weekOffset = 0; save(); render(); break;
     case 'set-start': S.settings.dayStart = Number(el.value); save(); render(); break;
     case 'set-end': S.settings.dayEnd = Number(el.value); save(); render(); break;

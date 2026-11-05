@@ -1,6 +1,6 @@
 # Mind Bucket
 
-A planner for busy, multi-interest people. Split each day into time buckets, then fit your interests, to-dos, purchases, ideas and trip plans into them.
+A planner for busy, multi-interest people. Split each day into time buckets, then fit your interests, to-dos, purchases, ideas and trip plans into them. A bucket list keeps the once-in-a-lifetime things, like scuba diving or paragliding, with a target year, rough cost, first steps and a plan with dates.
 
 Anyone can use it as a guest with no login. A guest's planner is saved in their own browser (localStorage), and Settings has a backup you can download to move it to another browser or device. Once Firebase is set up (see below), people can also sign in with Google, and their planner is saved to their account and syncs across devices.
 
