@@ -1,0 +1,1441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mind Bucket</title>
+<meta name="description" content="Plan your week in buckets: time for work, study, must-dos and the interests you keep putting off.">
+<meta name="theme-color" content="#111111">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mind Bucket">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mind Bucket">
+<meta property="og:description" content="Plan your week in buckets: time for work, study, must-dos and the interests you keep putting off.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: black app frame → top bar → rounded grey canvas (main column + side panel) → floating quick-add dock */
+:root{
+  --frame:#111111; --frame-ink:#FFFFFF; --frame-ink-2:#A1A1A1; --frame-hover:#262626;
+  --canvas:#F3F3F3; --surface:#FFFFFF; --subtle:#ECECEC; --muted:#E2E2E2;
+  --line:#E2E2E2; --line-strong:#CFCFCF;
+  --ink:#111111; --ink-2:#4E4E4E; --ink-3:#6B6B6B;
+  --accent:#111111; --on-accent:#FFFFFF;
+  --danger:#C62F2F; --danger-bg:#FDECEC;
+  --sky-bg:#E1F1FB; --sky-ac:#BEE3F8; --sky-fg:#1D5F86;
+  --mint-bg:#DDF6DE; --mint-ac:#B6EBBB; --mint-fg:#1F6B34;
+  --butter-bg:#FFF3C4; --butter-ac:#FBE18A; --butter-fg:#6E5300;
+  --rose-bg:#FCE1E8; --rose-ac:#F7BFD0; --rose-fg:#9B2C4B;
+  --lavender-bg:#EEDFFB; --lavender-ac:#D9BFF5; --lavender-fg:#5E3591;
+  --slate-bg:#ECECEC; --slate-ac:#D0D0D0; --slate-fg:#3A3A3A;
+  --shadow-sm:0 1px 2px rgba(17,17,17,.06);
+  --shadow-md:0 1px 2px rgba(17,17,17,.04),0 8px 20px -4px rgba(17,17,17,.14);
+  --overlay:rgba(17,17,17,.4);
+  --font:"Urbanist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --frame:#050505; --frame-ink:#F2F2F2; --frame-ink-2:#8F8F8F; --frame-hover:#1E1E1E;
+    --canvas:#151515; --surface:#1F1F1F; --subtle:#1A1A1A; --muted:#2C2C2C;
+    --line:#2C2C2C; --line-strong:#3D3D3D;
+    --ink:#F2F2F2; --ink-2:#BDBDBD; --ink-3:#8F8F8F;
+    --accent:#F2F2F2; --on-accent:#111111;
+    --danger:#FF8A80; --danger-bg:#3A1A1A;
+    --sky-bg:#132A3A; --sky-ac:#25506E; --sky-fg:#A9D8F5;
+    --mint-bg:#142B1A; --mint-ac:#25502F; --mint-fg:#A8E6B2;
+    --butter-bg:#2D2510; --butter-ac:#5C4A12; --butter-fg:#F5DC8A;
+    --rose-bg:#33161F; --rose-ac:#64283A; --rose-fg:#F5B5C7;
+    --lavender-bg:#261B36; --lavender-ac:#47336A; --lavender-fg:#DCC4F7;
+    --slate-bg:#262626; --slate-ac:#3D3D3D; --slate-fg:#D0D0D0;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 1px 2px rgba(0,0,0,.4),0 10px 24px -4px rgba(0,0,0,.6);
+    --overlay:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --frame:#050505; --frame-ink:#F2F2F2; --frame-ink-2:#8F8F8F; --frame-hover:#1E1E1E;
+  --canvas:#151515; --surface:#1F1F1F; --subtle:#1A1A1A; --muted:#2C2C2C;
+  --line:#2C2C2C; --line-strong:#3D3D3D;
+  --ink:#F2F2F2; --ink-2:#BDBDBD; --ink-3:#8F8F8F;
+  --accent:#F2F2F2; --on-accent:#111111;
+  --danger:#FF8A80; --danger-bg:#3A1A1A;
+  --sky-bg:#132A3A; --sky-ac:#25506E; --sky-fg:#A9D8F5;
+  --mint-bg:#142B1A; --mint-ac:#25502F; --mint-fg:#A8E6B2;
+  --butter-bg:#2D2510; --butter-ac:#5C4A12; --butter-fg:#F5DC8A;
+  --rose-bg:#33161F; --rose-ac:#64283A; --rose-fg:#F5B5C7;
+  --lavender-bg:#261B36; --lavender-ac:#47336A; --lavender-fg:#DCC4F7;
+  --slate-bg:#262626; --slate-ac:#3D3D3D; --slate-fg:#D0D0D0;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 1px 2px rgba(0,0,0,.4),0 10px 24px -4px rgba(0,0,0,.6);
+  --overlay:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;background:var(--frame);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+body{
+  height:100%; margin:0; background:var(--frame); color:var(--ink);
+  font:400 14px/20px var(--font); display:flex; flex-direction:column; overflow:hidden;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p{margin:0}
+h1{font-size:30px;line-height:38px;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:22px;line-height:28px;font-weight:500;letter-spacing:-.005em}
+h3{font-size:18px;line-height:24px;font-weight:500}
+.h2{display:block;font-size:22px;line-height:28px;font-weight:500;letter-spacing:-.005em;color:var(--ink)}
+.overline{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.muted{color:var(--ink-2);font-size:13px;line-height:18px}
+.faint{color:var(--ink-3)}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg{flex:none}
+
+/* tones */
+.t-sky{--t-bg:var(--sky-bg);--t-ac:var(--sky-ac);--t-fg:var(--sky-fg)}
+.t-mint{--t-bg:var(--mint-bg);--t-ac:var(--mint-ac);--t-fg:var(--mint-fg)}
+.t-butter{--t-bg:var(--butter-bg);--t-ac:var(--butter-ac);--t-fg:var(--butter-fg)}
+.t-rose{--t-bg:var(--rose-bg);--t-ac:var(--rose-ac);--t-fg:var(--rose-fg)}
+.t-lavender{--t-bg:var(--lavender-bg);--t-ac:var(--lavender-ac);--t-fg:var(--lavender-fg)}
+.t-slate{--t-bg:var(--slate-bg);--t-ac:var(--slate-ac);--t-fg:var(--slate-fg)}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;flex:none;color:var(--frame-ink);padding-inline:12px}
+.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;background:none;border:0;padding:0}
+.mark{display:grid;grid-template-columns:12px 12px;gap:4px}
+.mark i{width:12px;height:12px;border-radius:4px;display:block}
+.nav{display:flex;align-items:center;gap:4px;min-width:0}
+.nav button{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:999px;border:0;background:none;color:var(--frame-ink-2);white-space:nowrap}
+.nav button:hover{background:var(--frame-hover);color:var(--frame-ink)}
+.nav button[aria-current="page"]{color:var(--frame-ink)}
+.nav button .lbl{display:none;font-weight:500}
+.nav button[aria-current="page"] .lbl{display:inline}
+.who{display:flex;align-items:center;gap:12px}
+.status{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--frame-hover);color:var(--frame-ink-2);font-size:12px;font-weight:500;background:none;white-space:nowrap}
+.status:hover{color:var(--frame-ink)}
+.status .dot{width:6px;height:6px;border-radius:50%;background:var(--mint-ac)}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--lavender-ac);color:var(--lavender-fg);font-size:12px;font-weight:600;border:0}
+.top :focus-visible{outline-color:var(--frame-ink)}
+
+/* shell */
+.shell{flex:1;min-height:0;background:var(--canvas);border-radius:28px 28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) 368px;overflow:hidden}
+.main{overflow-y:auto;padding:32px 32px 120px;display:flex;flex-direction:column;gap:24px;min-width:0}
+.panel{overflow-y:auto;background:var(--subtle);padding:32px 24px 120px;display:flex;flex-direction:column;gap:24px;min-width:0}
+.panel section{display:flex;flex-direction:column;gap:10px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.phead span{color:var(--ink-2);font-weight:500}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.head .ttl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.nav-group{display:flex;align-items:center;gap:6px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;border:1px solid transparent;font-weight:500;white-space:nowrap;background:var(--surface);text-decoration:none;color:var(--ink)}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{opacity:.88}
+.btn-secondary{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-secondary:hover{background:var(--subtle)}
+.btn-soft{background:var(--mint-bg);color:var(--mint-fg)}
+.btn-danger{background:var(--danger-bg);color:var(--danger)}
+.btn-ghost{background:transparent;color:var(--ink-2)}
+.btn-ghost:hover{background:var(--subtle);color:var(--ink)}
+.btn-sm{height:32px;padding:0 12px;font-size:13px;gap:6px}
+.btn-block{width:100%}
+.icon-btn{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);flex:none;text-decoration:none}
+.icon-btn:hover{background:var(--subtle)}
+.icon-btn.sm{width:32px;height:32px}
+.icon-btn.ghost{border-color:transparent;background:var(--subtle);color:var(--ink-2)}
+.icon-btn.ghost:hover{background:var(--muted);color:var(--ink)}
+.icon-btn.bare{border-color:transparent;background:transparent;color:var(--ink-3)}
+.icon-btn.bare:hover{background:var(--subtle);color:var(--ink)}
+
+/* segmented */
+.seg{display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--muted);flex-wrap:wrap}
+.seg button{height:32px;padding:0 14px;border-radius:999px;border:0;background:transparent;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+.seg button .c{color:var(--ink-3);margin-left:4px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;font-size:12px;line-height:16px;font-weight:500;background:var(--t-bg,var(--subtle));color:var(--t-fg,var(--ink-2));white-space:nowrap;border:0}
+.chip.outline{background:transparent;border:1px solid var(--line-strong);color:var(--ink-2)}
+.chip.dark{background:var(--accent);color:var(--on-accent)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="false"]{background:transparent;border:1px solid var(--line-strong);color:var(--ink-2)}
+
+/* cards & common */
+.card{background:var(--surface);border-radius:28px;box-shadow:var(--shadow-sm)}
+.banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--butter-bg);color:var(--butter-fg);border-radius:16px;padding:12px 12px 12px 16px}
+.banner p{flex:1;min-width:220px;font-weight:500}
+.banner .btn-secondary{border-color:transparent}
+.empty{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:28px}
+.empty p{max-width:52ch}
+.tpl{display:flex;gap:8px;flex-wrap:wrap}
+.tpl button{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--t-bg);color:var(--t-fg);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{border-radius:20px;padding:16px 6px;text-align:center;background:var(--t-bg,transparent)}
+.stat.outline{border:1.5px dashed var(--line-strong)}
+.stat b{display:block;font-size:28px;line-height:32px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat span{font-size:12px;line-height:16px;font-weight:500;color:var(--ink-2)}
+
+/* calendar */
+.cal-card{padding:16px}
+.cal-scroll{overflow-x:auto;overflow-y:hidden}
+.cal-grid{display:grid;grid-template-columns:48px repeat(var(--cols),minmax(112px,1fr));column-gap:8px;row-gap:8px}
+.cal-grid.day{grid-template-columns:48px minmax(0,1fr)}
+.cal-grid.week{min-width:calc(48px + var(--cols) * 120px)}
+.dhead{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border-radius:999px;border:0;background:transparent;color:var(--ink-2)}
+.dhead b{color:var(--ink);font-weight:500}
+.dhead:hover{background:var(--subtle)}
+.dhead.today{background:var(--accent);color:var(--on-accent)}
+.dhead.today b{color:var(--on-accent)}
+.axis{position:relative;height:calc(var(--hours) * 48px)}
+.axis span{position:absolute;left:0;font-size:12px;line-height:16px;font-weight:500;color:var(--ink-3);transform:translateY(4px)}
+.dcol{position:relative;height:calc(var(--hours) * 48px);background-image:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 48px);border-bottom:1px solid var(--line)}
+.dcol.is-today{background-color:var(--canvas);border-radius:12px}
+.blk{position:absolute;left:0;right:0;border-radius:12px;background:var(--t-bg);color:var(--t-fg);padding:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;text-align:left}
+.blk:hover{box-shadow:inset 0 0 0 1.5px var(--t-ac)}
+.blk.short{padding:4px 8px;justify-content:center}
+.blk.short .blk-title{line-height:18px}
+.blk-title{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk-time{font-size:12px;line-height:16px;font-weight:500;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk-items{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:8px;min-width:0;max-width:100%}
+.pill{display:inline-flex;align-items:center;gap:6px;max-width:100%;height:26px;padding:0 10px 0 6px;border-radius:999px;border:0;background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--t-fg);font-size:12px;font-weight:500}
+.pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill .ring{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;flex:none}
+.pill.done span{text-decoration:line-through;opacity:.7}
+.pill.done .ring{background:currentColor}
+.pill.done .ring svg{color:var(--t-bg)}
+.blk.trip{align-items:flex-start;gap:6px;padding:12px}
+.blk.drop-hover,.agenda.drop-hover{box-shadow:inset 0 0 0 2px var(--t-fg)}
+.free{position:absolute;left:0;right:0;border:1.5px dashed var(--line-strong);border-radius:12px;background:transparent;color:var(--ink-3);display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:500}
+.free:hover{color:var(--ink);border-color:var(--ink-3)}
+.now{position:absolute;left:-4px;right:0;height:2px;background:var(--accent);z-index:2;pointer-events:none}
+.now::before{content:"";position:absolute;left:0;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+/* agenda */
+.agenda{background:var(--t-bg);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.agenda-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;color:var(--t-fg);font-weight:500}
+.agenda-head .l{display:flex;align-items:center;gap:8px;min-width:0}
+.agenda-head .l span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agenda-head small{font-size:12px;font-weight:500;white-space:nowrap}
+.agenda-body{background:var(--surface);border-radius:16px;padding:12px;font-size:13px;line-height:18px;color:var(--ink);display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}
+.agenda-body .line{display:flex;align-items:center;gap:8px}
+.agenda-body .line button{display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;text-align:left;min-width:0}
+.agenda-body .line.done span{text-decoration:line-through;color:var(--ink-3)}
+button.agenda{border:0;text-align:left;width:100%}
+.agenda.sel{box-shadow:0 0 0 2px var(--accent),var(--shadow-md)}
+
+/* checks */
+.check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;flex:none;color:transparent;padding:0}
+.check:hover{border-color:var(--ink-3)}
+.check.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* drag items & drop zones */
+.drag{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;cursor:grab;user-select:none}
+.drag:active{cursor:grabbing}
+.drag .grip{color:var(--ink-3)}
+.drag .txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.drag .txt b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drag .txt small{font-size:12px;line-height:16px;color:var(--ink-3)}
+.drag .cnt{font-size:12px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.icirc{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--t-bg);color:var(--t-fg);flex:none}
+.icirc.lg{width:44px;height:44px}
+.dragging{opacity:.45}
+.dz{display:flex;align-items:center;gap:8px;width:100%;min-height:52px;padding:12px 16px;border:1.5px dashed var(--line-strong);border-radius:16px;background:transparent;color:var(--ink-2);font-size:13px;font-weight:500;text-align:left}
+.dz .lbl{flex:1;min-width:0}
+.dz small{color:var(--ink-3);font-size:12px;white-space:nowrap}
+.dz:hover{border-color:var(--ink-3);color:var(--ink)}
+.dz.drop-hover{background:var(--lavender-bg);border-color:var(--lavender-fg);color:var(--lavender-fg)}
+
+/* interests */
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px}
+.icard{padding:24px;display:flex;flex-direction:column;gap:16px;cursor:grab}
+.icard .top-row{display:flex;align-items:center;justify-content:space-between}
+.icard h2{overflow-wrap:anywhere}
+.icard .txt{display:flex;flex-direction:column;gap:6px;flex:1}
+.prog{display:flex;flex-direction:column;gap:8px}
+.prog-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:var(--ink-2)}
+.prog-row b{color:var(--ink);font-weight:500}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:6px;border-radius:3px;background:var(--muted)}
+.segs i.done{background:var(--accent)}
+.segs i.planned{background:var(--line-strong)}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bal{background:var(--surface);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.bal-row{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;align-items:center;font-size:13px}
+.bal-row span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bal-track{position:relative;height:8px;border-radius:4px;background:var(--subtle);overflow:hidden}
+.bal-track i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.bal-track i.pl{background:var(--t-ac)}
+.bal-track i.dn{background:var(--t-fg)}
+.bal-row .v{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* lists */
+.capture{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;flex-wrap:wrap;border-radius:20px}
+.capture > svg{color:var(--ink-3)}
+.capture input[type=text]{flex:1;min-width:180px;height:40px;border:0;background:transparent;outline:none;font-size:14px}
+.capture input[type=text]::placeholder{color:var(--ink-3)}
+.capture select{height:32px;border-radius:999px;border:1px solid var(--line);background:var(--surface);padding:0 10px;font-size:13px}
+.capture .seg{background:var(--subtle)}
+.capture .seg button{height:28px;font-size:13px}
+.list{display:flex;flex-direction:column;gap:8px}
+.list-head{display:flex;align-items:center;gap:8px}
+.list-head span{color:var(--ink-3);font-weight:500}
+.row{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;background:var(--surface);border-radius:16px;min-width:0}
+.row[draggable="true"]{cursor:grab}
+.row .rt{flex:1;min-width:0;display:flex;flex-direction:column}
+.row .rt b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt small{font-size:12px;line-height:16px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt small.late{color:var(--danger)}
+.row.is-done .rt b{text-decoration:line-through;color:var(--ink-3)}
+.row .acts{display:flex;align-items:center;gap:4px}
+.row.in{background:var(--canvas)}
+.list-empty{padding:16px;border-radius:16px;border:1.5px dashed var(--line-strong);color:var(--ink-3);font-size:13px}
+
+/* purchases */
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.cols.one{grid-template-columns:minmax(0,1fr)}
+.col{padding:16px;display:flex;flex-direction:column;gap:8px}
+.col-head{display:flex;flex-direction:column;gap:4px;padding:4px 4px 8px}
+.col-head .r{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.col-head .l{display:flex;align-items:center;gap:8px}
+.months{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px}
+.month{display:flex;flex-direction:column;gap:6px}
+.mbar{display:flex;gap:2px;height:8px;border-radius:4px;background:var(--subtle);overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:4px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--ink-2);font-weight:500}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%;display:block}
+.pad{padding:24px;display:flex;flex-direction:column;gap:16px}
+.field-inline{display:flex;align-items:center;gap:8px;height:44px;padding:0 6px 0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.field-inline input{flex:1;min-width:0;border:0;background:transparent;outline:none;height:40px}
+.field-inline svg{color:var(--ink-3)}
+
+/* ideas */
+.board{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:24px;align-items:start}
+.board .colm{display:flex;flex-direction:column;gap:12px;min-width:0}
+.colm-head{display:flex;align-items:center;gap:8px;padding-left:4px}
+.colm-head i{width:10px;height:10px;border-radius:50%;background:var(--t-ac);display:block}
+.colm-head span{color:var(--ink-3);font-weight:500}
+.search{display:flex;align-items:center;gap:8px;height:40px;width:240px;max-width:100%;padding:0 16px;border-radius:999px;background:var(--muted)}
+.search input{border:0;background:transparent;outline:none;flex:1;min-width:0}
+.search svg{color:var(--ink-3)}
+
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+.plan{padding:16px;display:flex;flex-direction:column;gap:16px;border:0;text-align:left;width:100%}
+.plan.sel{box-shadow:0 0 0 2px var(--accent),var(--shadow-md)}
+.cover{height:88px;border-radius:20px;background:var(--t-bg);padding:16px;display:flex;justify-content:space-between;align-items:flex-start}
+.cover .icirc{background:var(--surface)}
+.datepill{background:var(--surface);color:var(--ink);font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.plan .t{display:flex;flex-direction:column;gap:4px;padding:0 4px}
+.plan .meta{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:13px}
+.plan .foot{padding:0 4px}
+.plan .foot small{font-size:12px;color:var(--ink-2);font-weight:500}
+.days{display:flex;flex-direction:column;gap:8px}
+.dayrow{display:flex;align-items:center;gap:16px;padding:12px;border-radius:16px;background:var(--canvas)}
+.badge{width:52px;height:52px;border-radius:12px;background:var(--t-bg);color:var(--t-fg);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.badge small{font-size:11px;line-height:14px;font-weight:600}
+.badge b{font-size:18px;line-height:22px;font-weight:500}
+.dayrow .dt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dayrow input{width:100%;height:32px;border:0;border-bottom:1px solid transparent;background:transparent;font-weight:500;outline:none;padding:0}
+.dayrow input:focus{border-bottom-color:var(--line-strong)}
+.dayrow input::placeholder{color:var(--ink-3);font-weight:400}
+.dayrow small{font-size:12px;color:var(--ink-3)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;border-radius:16px;background:var(--surface);border:0;text-align:left}
+.switch .k{width:40px;height:24px;border-radius:999px;background:var(--muted);position:relative;flex:none;transition:background .15s}
+.switch .k::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow-sm);transition:transform .15s}
+.switch[aria-pressed="true"] .k{background:var(--accent)}
+.switch[aria-pressed="true"] .k::after{transform:translateX(16px)}
+.switch small{display:block;font-size:12px;color:var(--ink-3)}
+
+/* dock */
+.dock{position:fixed;z-index:30;bottom:calc(16px + env(safe-area-inset-bottom, 0px));left:calc((100vw - 368px) / 2);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px;border-radius:999px;background:var(--frame);box-shadow:var(--shadow-md);border:1px solid var(--frame-hover)}
+.dock button{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--t-ac);color:var(--t-fg)}
+.dock button:hover{transform:translateY(-2px)}
+.dock .plus{background:var(--frame-ink);color:var(--frame)}
+.dock .sep{width:1px;height:24px;background:var(--frame-hover)}
+@media (prefers-reduced-motion: reduce){.dock button:hover{transform:none}.switch .k,.switch .k::after{transition:none}}
+
+/* modal */
+.overlay{position:fixed;inset:0;z-index:50;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:max(16px, env(safe-area-inset-bottom, 0px))}
+.modal{background:var(--surface);border-radius:24px;width:min(520px,100%);max-height:100%;overflow:auto;box-shadow:var(--shadow-md);display:flex;flex-direction:column}
+.modal form,.modal .mbody{padding:24px;display:flex;flex-direction:column;gap:16px}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mhead p{margin-top:2px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field > span,.field legend{font-size:12px;line-height:16px;font-weight:500;color:var(--ink-2)}
+.field input:not([type=checkbox]):not([type=radio]),.field select,.field textarea{width:100%;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px}
+.field textarea{height:auto;min-height:88px;padding:10px 14px;resize:vertical;line-height:20px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+fieldset.field{border:0;padding:0;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{position:relative}
+.opts input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opts .o{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--ink-2);background:var(--surface)}
+.opts input:checked + .o{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opts input:focus-visible + .o{outline:2px solid var(--accent);outline-offset:2px}
+.swatches .o{width:34px;padding:0;justify-content:center;background:var(--t-bg);border-color:transparent}
+.swatches input:checked + .o{background:var(--t-bg);border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--surface)}
+.icons .o{width:40px;height:40px;padding:0;justify-content:center}
+.mfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:4px}
+.mfoot .r{display:flex;gap:8px;margin-left:auto}
+.err{color:var(--danger);font-size:13px;font-weight:500}
+.err:empty{display:none}
+.daychips{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px}
+.daychips button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:12px;font-weight:500}
+.daychips button b{font-size:16px;color:var(--ink);font-weight:500}
+.daychips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.daychips button[aria-pressed="true"] b{color:var(--on-accent)}
+.pick{display:flex;flex-direction:column;gap:8px}
+.pick label{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--t-bg);color:var(--t-fg);cursor:pointer;font-weight:500;border:2px solid transparent}
+.pick label:has(input:checked){border-color:var(--t-fg)}
+.pick input{accent-color:currentColor}
+.pick small{margin-left:auto;font-size:12px;opacity:.85}
+.note{font-size:13px;line-height:18px;color:var(--ink-2);background:var(--subtle);border-radius:12px;padding:12px}
+.chooser{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.chooser button{display:flex;align-items:center;gap:10px;padding:14px;border-radius:16px;border:0;background:var(--t-bg);color:var(--t-fg);font-weight:500;text-align:left}
+
+/* toast */
+#toast{position:fixed;z-index:60;left:50%;bottom:calc(84px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--accent);color:var(--on-accent);padding:10px 16px;border-radius:999px;font-weight:500;box-shadow:var(--shadow-md);max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toast:empty{display:none}
+
+/* responsive */
+@media (max-width: 1180px){
+  .top .status .t{display:none}
+}
+@media (max-width: 1080px){
+  .shell{grid-template-columns:minmax(0,1fr);overflow-y:auto}
+  .main{overflow:visible;padding-bottom:16px}
+  .panel{overflow:visible;background:transparent;padding:8px 32px 120px}
+  .dock{left:50%}
+}
+@media (max-width: 860px){
+  .nav button{padding:0 10px}
+  .nav button[aria-current="page"] .lbl{display:none}
+  .logo .name{display:none}
+}
+@media (max-width: 640px){
+  .top{padding-inline:0;gap:8px}
+  .nav{gap:0}
+  .nav button{padding:0 8px;height:36px}
+  .who .avatar{display:none}
+  .shell{border-radius:20px 20px 0 0}
+  .main{padding:20px 16px 12px;gap:20px}
+  .panel{padding:8px 16px 112px}
+  h1{font-size:26px;line-height:32px}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .board{grid-template-columns:minmax(0,1fr)}
+  .two{grid-template-columns:1fr}
+  .icard{padding:20px}
+  .search{width:100%}
+  .controls{width:100%}
+  .row .acts .hide-sm{display:none}
+  .overlay{align-items:flex-end;padding:0}
+  .modal{border-radius:24px 24px 0 0;max-height:92%}
+}
+@media (max-width: 400px){
+  .nav button{padding:0 6px}
+  .status{padding:0 8px}
+}
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<div class="shell" id="shell"><main class="main" id="main"></main><aside class="panel" id="panel" aria-label="Side panel"></aside></div>
+<nav class="dock" id="dock" aria-label="Quick add"></nav>
+<div id="modal-root"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------------- constants ---------------- */
+const LS_KEY = 'mindbucket.v1';
+const HR = 48;
+const TONES = ['sky','mint','butter','rose','lavender','slate'];
+const TODO_TAGS = { General:'slate', Study:'lavender', Work:'sky', Home:'butter', Errand:'mint' };
+const IDEA_TAGS = ['Idea','App','Hobby','Home','Trip','Learning','Cooking','Fitness'];
+const IDEA_STATUS = { new:{label:'New', tone:'butter'}, planned:{label:'Planned', tone:'lavender'}, done:{label:'Done', tone:'mint'}, dropped:{label:'Dropped', tone:'slate'} };
+const LEVELS = { focus:{label:'Focus', tone:'lavender'}, maintain:{label:'Maintain', tone:'mint'}, parked:{label:'Parked', tone:'slate'} };
+const PLAN_STATUS = { idea:{label:'Idea', tone:'slate'}, planning:{label:'Planning', tone:'lavender'}, booked:{label:'Booked', tone:'mint'}, done:{label:'Done', tone:'slate'} };
+const INTEREST_ICONS = ['music','palette','bike','ball','utensils','languages','book','camera','sun','star','briefcase','map'];
+const VIEWS = [
+  { id:'calendar', label:'Calendar', icon:'calendar' },
+  { id:'interests', label:'Interests', icon:'star' },
+  { id:'todo', label:'To-do', icon:'checksq' },
+  { id:'purchases', label:'Purchases', icon:'bag' },
+  { id:'ideas', label:'Ideas', icon:'idea' },
+  { id:'plans', label:'Plans', icon:'map' }
+];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MON_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TEMPLATES = [
+  { name:'Slow morning', tone:'butter', start:'07:00', end:'09:00', days:[0,1,2,3,4,5,6] },
+  { name:'Work', tone:'sky', start:'09:00', end:'17:00', days:[0,1,2,3,4] },
+  { name:'Learning', tone:'lavender', start:'18:00', end:'19:00', days:[0,1,2,3,4] },
+  { name:'Interests', tone:'lavender', start:'10:00', end:'12:00', days:[5,6] },
+  { name:'Family time', tone:'rose', start:'20:00', end:'22:00', days:[0,1,2,3,4,5,6] }
+];
+
+const D_ = '" fill="currentColor" stroke="none"/>';
+const ICONS = {
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  chevL:'<path d="m15 18-6-6 6-6"/>',
+  chevR:'<path d="m9 18 6-6-6-6"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  star:'<path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"/>',
+  checksq:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  bag:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',
+  idea:'<path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z"/>',
+  map:'<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  more:'<circle cx="5" cy="12" r="1.6' + D_ + '<circle cx="12" cy="12" r="1.6' + D_ + '<circle cx="19" cy="12" r="1.6' + D_,
+  grip:'<circle cx="9" cy="6" r="1.5' + D_ + '<circle cx="9" cy="12" r="1.5' + D_ + '<circle cx="9" cy="18" r="1.5' + D_ + '<circle cx="15" cy="6" r="1.5' + D_ + '<circle cx="15" cy="12" r="1.5' + D_ + '<circle cx="15" cy="18" r="1.5' + D_,
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  book:'<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5"/><path d="M8 7h8"/>',
+  music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  palette:'<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.3' + D_ + '<circle cx="10.5" cy="7" r="1.3' + D_ + '<circle cx="15.2" cy="7.6" r="1.3' + D_,
+  bike:'<circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M5.5 17 9 10h6l3.5 7M9 10l3 7h6.5M13.5 6.5H16l-1 3.5"/>',
+  utensils:'<path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M18 2c-1.8 1.3-3 3.6-3 6.5V13h3v9"/>',
+  ball:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/>',
+  languages:'<path d="M4 5h9M8.5 3v2M6 5c1 3.5 3.5 6 7 7.5M11 5c-1 3.5-3.5 6-7 7.5"/><path d="m12 21 4.5-10L21 21M13.6 17.5h5.8"/>',
+  camera:'<path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/>',
+  link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  wallet:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',
+  plane:'<path d="M2.5 13.5 21 6.5l-4.5 13-4-5.5-6 2.5 2-4.5z"/><path d="m12.5 14 8.5-7.5"/>',
+  pin:'<path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  cloud:'<path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/>',
+  device:'<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'
+};
+const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const pad2 = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const today0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const daysBetween = (a, b) => Math.round((parseYmd(ymd(b)) - parseYmd(ymd(a))) / 86400000);
+const startOfWeek = (d, ws) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return addDays(x, -((x.getDay() - ws + 7) % 7)); };
+const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+const minToTime = m => `${pad2(Math.floor(m / 60) % 24)}:${pad2(m % 60)}`;
+const ampm = m => (Math.floor(m / 60) % 24) >= 12 ? 'pm' : 'am';
+const core = m => { let h = Math.floor(m / 60) % 24; const mm = m % 60; h = h % 12 || 12; return mm ? `${h}:${pad2(mm)}` : `${h}`; };
+const fmtTime = m => `${core(m)} ${ampm(m)}`;
+const fmtRange = (a, b) => ampm(a) === ampm(b) ? `${core(a)} – ${core(b)} ${ampm(b)}` : `${fmtTime(a)} – ${fmtTime(b)}`;
+const fmtDay = d => `${DAY_SHORT[d.getDay()]} ${d.getDate()} ${MON_SHORT[d.getMonth()]}`;
+const fmtDayLong = d => `${DAY_LONG[d.getDay()]}, ${d.getDate()} ${MON_LONG[d.getMonth()]} ${d.getFullYear()}`;
+const rangeLabel = (a, b) => a.getMonth() === b.getMonth() ? `${a.getDate()} – ${b.getDate()} ${MON_SHORT[b.getMonth()]}` : `${a.getDate()} ${MON_SHORT[a.getMonth()]} – ${b.getDate()} ${MON_SHORT[b.getMonth()]}`;
+const dur = m => m < 60 ? `${m}m` : (m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m / 60}h`);
+const hrs = m => m === 0 ? '0h' : m < 60 ? `${m}m` : (m % 60 === 0 ? `${m / 60}h` : `${(m / 60).toFixed(1).replace(/\.0$/, '')}h`);
+const money = n => 'BDT ' + Math.round(n || 0).toLocaleString('en-US');
+const kfmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(Math.round(n));
+const monthKey = (d, off = 0) => { const x = new Date(d.getFullYear(), d.getMonth() + off, 1); return `${x.getFullYear()}-${pad2(x.getMonth() + 1)}`; };
+const monthShort = k => { if (!k) return 'Someday'; const [y, m] = k.split('-').map(Number); return MON_SHORT[m - 1] + (y !== new Date().getFullYear() ? ` ’${String(y).slice(2)}` : ''); };
+const monthLong = k => { if (!k) return 'Someday'; const [y, m] = k.split('-').map(Number); return `${MON_LONG[m - 1]} ${y}`; };
+const byId = (arr, id) => arr.find(x => x.id === id);
+const safeLink = u => { u = String(u || '').trim(); if (!u) return ''; if (!/^https?:\/\//i.test(u)) u = 'https://' + u; try { const url = new URL(u); return /^https?:$/.test(url.protocol) ? url.href : ''; } catch (e) { return ''; } };
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+/* ---------------- data ---------------- */
+function emptyState(settings) {
+  return { version:1, sample:false, updatedAt:Date.now(), settings: settings || { weekStart:6, dayStart:7, dayEnd:23 },
+    buckets:[], interests:[], sessions:[], todos:[], purchases:[], ideas:[], plans:[] };
+}
+function sample() {
+  const t = today0();
+  const W = Array.from({ length:7 }, (_, i) => addDays(startOfWeek(t, 6), i)); // Sat … Fri
+  const id = {}; const mk = k => (id[k] = uid());
+  const at = (d, h, m) => { const x = new Date(d); x.setHours(h, m, 0, 0); return x.getTime(); };
+  const buckets = [
+    { id:mk('slow'), name:'Slow morning', tone:'butter', start:'08:00', end:'10:00', days:[0,1,2,3,4,6] },
+    { id:mk('slowfri'), name:'Slow morning', tone:'butter', start:'08:00', end:'11:00', days:[5] },
+    { id:mk('learn'), name:'Learning', tone:'lavender', start:'11:00', end:'12:00', days:[0,1,2,3,4] },
+    { id:mk('job'), name:'Full-time job', tone:'sky', start:'14:00', end:'22:00', days:[0,1,2,3,4] },
+    { id:mk('wk'), name:'Interests', tone:'lavender', start:'11:00', end:'13:00', days:[5,6] },
+    { id:mk('ball'), name:'Basketball', tone:'mint', start:'16:00', end:'18:00', days:[6] },
+    { id:mk('errand'), name:'Errands', tone:'slate', start:'15:00', end:'17:00', days:[5] },
+    { id:mk('family'), name:'Family time', tone:'rose', start:'19:00', end:'21:00', days:[5,6] }
+  ];
+  const interests = [
+    { id:mk('piano'), name:'Learn piano', note:'Scales and one easy song. 45-minute sessions in the evening.', tone:'lavender', icon:'music', level:'focus', perWeek:3, minutes:45 },
+    { id:mk('water'), name:'Watercolor', note:'Loose landscapes. Needs a 90-minute block with good light.', tone:'rose', icon:'palette', level:'focus', perWeek:2, minutes:90 },
+    { id:mk('cycle'), name:'Cycling', note:'Friday morning rides with the cycling club.', tone:'mint', icon:'bike', level:'maintain', perWeek:1, minutes:60 },
+    { id:mk('bb'), name:'Basketball', note:'Weekly game with friends on Saturday afternoon.', tone:'butter', icon:'ball', level:'maintain', perWeek:1, minutes:120 },
+    { id:mk('cook'), name:'Try cooking', note:'One new recipe every weekend, starting with daal.', tone:'sky', icon:'utensils', level:'maintain', perWeek:1, minutes:60 },
+    { id:mk('span'), name:'Spanish', note:'Paused until exams are over. 10-minute app lessons.', tone:'slate', icon:'languages', level:'parked', perWeek:1, minutes:10 }
+  ];
+  const ses = (kind, ref, b, d) => ({ id:uid(), kind, refId:id[ref], bucketId:id[b], date:ymd(d), done: d < t });
+  const sessions = [
+    ses('interest','piano','learn',W[1]), ses('interest','piano','learn',W[3]), ses('interest','piano','learn',W[5]),
+    ses('interest','water','wk',W[0]), ses('interest','water','wk',W[6]),
+    ses('interest','cycle','slowfri',W[6]), ses('interest','bb','ball',W[0])
+  ];
+  const now = Date.now();
+  const todos = [
+    { id:mk('t1'), title:'Submit thesis outline to supervisor', tag:'Study', due:ymd(t), done:false, doneAt:null, createdAt:now },
+    { id:mk('t2'), title:'Reply to client about the report draft', tag:'Work', due:ymd(t), done:false, doneAt:null, createdAt:now },
+    { id:mk('t3'), title:'Pay the electricity bill', tag:'Home', due:ymd(t), done:false, doneAt:null, createdAt:now },
+    { id:mk('t4'), title:'Return library books', tag:'Errand', due:null, done:false, doneAt:null, createdAt:now },
+    { id:mk('t5'), title:'Back up phone photos', tag:'General', due:null, done:false, doneAt:null, createdAt:now },
+    { id:mk('t6'), title:'Buy printer paper', tag:'Errand', due:ymd(t), done:true, doneAt:at(t, 9, 40), createdAt:now },
+    { id:mk('t7'), title:'Send weekly update', tag:'Work', due:ymd(addDays(t, -1)), done:true, doneAt:at(addDays(t, -1), 17, 10), createdAt:now }
+  ];
+  if ([0,1,2,3,4].includes(t.getDay())) sessions.push({ id:uid(), kind:'todo', refId:id.t2, bucketId:id.job, date:ymd(t), done:false });
+  const m0 = monthKey(t), m1 = monthKey(t, 1), m2 = monthKey(t, 2);
+  const p = (name, kind, price, month, note, bought) => ({ id:uid(), name, kind, price, month, note: note || '', link:'', bought: !!bought });
+  const purchases = [
+    p('Coffee beans (500 g)','need',650,m0,'Monthly'), p('Printer ink','need',1200,m0), p('Winter jacket','need',3500,m1), p('Desk lamp bulb','need',350,m0,'',true),
+    p('Ceramic showpiece','want',1800,m1), p('Watercolor paper pad','want',900,m0,'For Watercolor'), p('Mechanical keyboard','want',7500,m2), p('Bluetooth speaker','want',4200,m2), p('Film camera','want',12000,'')
+  ];
+  const idea = (text, tag, status, ago) => ({ id:uid(), text, tag, status, createdAt: addDays(t, -ago).getTime() });
+  const ideas = [
+    idea('A planner where hobbies get their own time buckets.','App','new',0),
+    idea('Paint the view from the rooftop at sunset.','Hobby','new',1),
+    idea('Start a small Sunday book club with two friends.','Idea','new',3),
+    idea('Try a new khichuri recipe for the family.','Cooking','planned',5),
+    idea('Short course on UI animation, 20 minutes a day.','Learning','planned',6),
+    idea('Repaint the old bookshelf in pastel green.','Home','done',12),
+    idea('Join the Friday cycling group.','Fitness','done',20)
+  ];
+  sessions.push({ id:uid(), kind:'idea', refId:ideas[3].id, bucketId:id.wk, date:ymd(addDays(W[0], 7)), done:false });
+  const s1 = startOfWeek(addDays(t, 40), 6), s2 = startOfWeek(addDays(t, 74), 4), s3 = startOfWeek(addDays(t, 105), 6);
+  const ck = (text, done) => ({ id:uid(), text, done: !!done });
+  const plans = [
+    { id:uid(), title:'Sylhet tea gardens', place:'Sylhet', tone:'sky', start:ymd(s1), end:ymd(addDays(s1, 6)), budget:18000, pause:true, status:'planning',
+      days:['Travel to Sylhet and check in','Tea gardens in Sreemangal','Ratargul swamp forest','Jaflong','Slow day: sketching and cafés','Lalakhal boat ride','Travel back home'],
+      checklist:[ck('Book train tickets',1), ck('Reserve the hotel',1), ck('Exchange cash',1), ck('Download offline maps',1), ck('Pack warm clothes'), ck('Bring sketchbook and paints'), ck('Charge the power bank'), ck('Rain jacket'), ck('Tell work about the leave')] },
+    { id:uid(), title:'Cox’s Bazar weekend', place:'Cox’s Bazar', tone:'butter', start:ymd(s2), end:ymd(addDays(s2, 2)), budget:12000, pause:false, status:'idea',
+      days:['Bus overnight, beach sunrise','Inani beach and Himchari','Back home'], checklist:[ck('Ask friends who can come'), ck('Check bus times')] },
+    { id:uid(), title:'Sajek Valley', place:'Rangamati', tone:'mint', start:ymd(s3), end:ymd(addDays(s3, 3)), budget:10000, pause:false, status:'idea',
+      days:[], checklist:[ck('Find a group to join')] }
+  ];
+  return { version:1, sample:true, updatedAt:0, settings:{ weekStart:6, dayStart:7, dayEnd:23 }, buckets, interests, sessions, todos, purchases, ideas, plans };
+}
+function migrate(d) {
+  if (!d || typeof d !== 'object') return sample();
+  const out = emptyState();
+  for (const k of ['buckets','interests','sessions','todos','purchases','ideas','plans']) out[k] = Array.isArray(d[k]) ? d[k] : [];
+  out.settings = Object.assign({ weekStart:6, dayStart:7, dayEnd:23 }, d.settings || {});
+  out.sample = !!d.sample; out.updatedAt = Number(d.updatedAt) || 0; out.version = 1;
+  out.plans.forEach(p => { p.days = Array.isArray(p.days) ? p.days : []; p.checklist = Array.isArray(p.checklist) ? p.checklist : []; });
+  out.buckets.forEach(b => { b.days = Array.isArray(b.days) ? b.days.map(Number) : []; });
+  return out;
+}
+
+/* ---------------- storage ---------------- */
+let S = null;
+function loadLocal() { try { const raw = localStorage.getItem(LS_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) {} return null; }
+function persistLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { S.updatedAt = Date.now(); persistLocal(); }
+const storageLabel = () => 'Saved in this browser';
+
+/* ---------------- ui state ---------------- */
+const UI = {
+  view:'calendar', calMode: (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) ? 'day' : 'week',
+  weekOffset:0, dayOffset:0, iFilter:'all', tFilter:'all', pFilter:'all', ideaQuery:'', showDropped:false,
+  ideaSel:null, planSel:null, modal:null, todoWhen:'today', pendingRender:false
+};
+let DRAG = null;
+
+/* ---------------- domain helpers ---------------- */
+function weekDates(off) { const s = addDays(startOfWeek(today0(), S.settings.weekStart), off * 7); return Array.from({ length:7 }, (_, i) => addDays(s, i)); }
+function tripOn(d) { const k = ymd(d); return S.plans.find(p => p.pause && p.start && p.end && k >= p.start && k <= p.end) || null; }
+function occurrencesOn(d) {
+  if (tripOn(d)) return [];
+  const dow = d.getDay();
+  return S.buckets.filter(b => b.days.includes(dow)).map(b => ({ b, s:toMin(b.start), e:toMin(b.end) })).sort((a, c) => a.s - c.s || c.e - a.e);
+}
+function sessionsFor(bid, k) { return S.sessions.filter(s => s.bucketId === bid && s.date === k); }
+function refOf(s) { return s.kind === 'interest' ? byId(S.interests, s.refId) : s.kind === 'todo' ? byId(S.todos, s.refId) : byId(S.ideas, s.refId); }
+function sessionName(s) {
+  const r = refOf(s);
+  if (!r) return 'Removed item';
+  if (s.kind === 'interest') return `${r.name} · ${dur(r.minutes || 30)}`;
+  if (s.kind === 'todo') return r.title;
+  return r.text;
+}
+function interestWeek(i) {
+  const ks = new Set(weekDates(0).map(ymd));
+  const ss = S.sessions.filter(s => s.kind === 'interest' && s.refId === i.id && ks.has(s.date));
+  const done = ss.filter(s => s.done).length;
+  return { done, planned: ss.length - done };
+}
+function hourRange() {
+  let h0 = Number(S.settings.dayStart), h1 = Number(S.settings.dayEnd);
+  for (const b of S.buckets) { h0 = Math.min(h0, Math.floor(toMin(b.start) / 60)); h1 = Math.max(h1, Math.ceil(toMin(b.end) / 60)); }
+  return { h0: Math.max(0, h0), h1: Math.min(24, Math.max(h1, h0 + 4)) };
+}
+function upcoming(limit) {
+  const out = []; const t = today0(); const n = new Date(); const nowM = n.getHours() * 60 + n.getMinutes();
+  for (let i = 0; i < 14 && out.length < limit; i++) {
+    const d = addDays(t, i);
+    for (const o of occurrencesOn(d)) { if (i === 0 && o.e <= nowM) continue; out.push(Object.assign({ date:d }, o)); if (out.length >= limit) break; }
+  }
+  return out;
+}
+function laneLayout(occ) {
+  const lanes = []; const res = occ.map(o => ({ o, lane:0, of:1 }));
+  res.forEach(r => { let li = lanes.findIndex(end => end <= r.o.s); if (li < 0) { li = lanes.length; lanes.push(0); } lanes[li] = r.o.e; r.lane = li; });
+  res.forEach(r => { const over = res.filter(x => x.o.s < r.o.e && x.o.e > r.o.s); r.of = Math.max(...over.map(x => x.lane)) + 1; });
+  return res;
+}
+function todoState(td) {
+  const k = ymd(today0());
+  if (td.done) return 'done';
+  if (td.due && td.due <= k) return 'today';
+  return 'later';
+}
+function openSessionFor(kind, id) { return S.sessions.find(s => s.kind === kind && s.refId === id && !s.done); }
+
+/* ---------------- mutations ---------------- */
+function commit(fn, msg) { fn(); save(); render(); if (msg) toast(msg); }
+function schedule(kind, id, bid, k) {
+  const b = byId(S.buckets, bid); const r = kind === 'interest' ? byId(S.interests, id) : kind === 'todo' ? byId(S.todos, id) : byId(S.ideas, id);
+  if (!b || !r) return;
+  if (S.sessions.some(s => s.kind === kind && s.refId === id && s.bucketId === bid && s.date === k)) { toast('Already in that bucket'); return; }
+  commit(() => {
+    S.sessions.push({ id:uid(), kind, refId:id, bucketId:bid, date:k, done:false });
+    if (kind === 'todo') r.due = k;
+    if (kind === 'idea' && r.status === 'new') r.status = 'planned';
+    if (kind === 'interest' && r.level === 'parked') r.level = 'maintain';
+  }, `${kind === 'interest' ? r.name : kind === 'todo' ? r.title : 'Idea'} added to ${b.name} · ${fmtDay(parseYmd(k))}`);
+}
+function toggleSession(sid) {
+  const s = byId(S.sessions, sid); if (!s) return;
+  commit(() => {
+    s.done = !s.done;
+    const r = refOf(s);
+    if (r && s.kind === 'todo') { r.done = s.done; r.doneAt = s.done ? Date.now() : null; }
+    if (r && s.kind === 'idea' && s.done) r.status = 'done';
+  });
+}
+function toggleTodo(id) {
+  const td = byId(S.todos, id); if (!td) return;
+  commit(() => {
+    td.done = !td.done; td.doneAt = td.done ? Date.now() : null;
+    S.sessions.filter(s => s.kind === 'todo' && s.refId === id).forEach(s => { s.done = td.done; });
+  }, td.done ? null : null);
+}
+function removeRef(kind, id) { S.sessions = S.sessions.filter(s => !(s.kind === kind && s.refId === id)); }
+
+/* ---------------- render: top + dock ---------------- */
+function renderTop() {
+  const cloud = false;
+  $('#top').innerHTML = `
+    <button class="logo" data-act="nav" data-view="calendar" aria-label="Mind Bucket home">
+      <span class="mark" aria-hidden="true"><i style="background:var(--butter-ac)"></i><i style="background:var(--lavender-ac)"></i><i style="background:var(--mint-ac)"></i><i style="background:var(--sky-ac)"></i></span>
+      <span class="name">Mind Bucket</span>
+    </button>
+    <nav class="nav" aria-label="Sections">
+      ${VIEWS.map(v => `<button type="button" data-act="nav" data-view="${v.id}" aria-label="${v.label}" title="${v.label}" ${UI.view === v.id ? 'aria-current="page"' : ''}>${icon(v.icon, 20)}<span class="lbl">${v.label}</span></button>`).join('')}
+    </nav>
+    <div class="who">
+      <button class="status" data-act="settings" title="${storageLabel()}">${icon(cloud ? 'cloud' : 'device', 16)}<span class="t">${storageLabel()}</span></button>
+      <button class="avatar" data-act="settings" aria-label="Guest settings" title="Guest">G</button>
+    </div>`;
+}
+function renderDock() {
+  const b = (tone, ic, type, label) => `<button type="button" class="t-${tone}" data-act="quick" data-type="${type}" aria-label="${label}" title="${label}">${icon(ic, 20)}</button>`;
+  $('#dock').innerHTML = b('butter','checksq','todo','Add a to-do') + b('lavender','star','interest','Add an interest') + b('mint','bag','purchase','Add a purchase') + b('sky','idea','idea','Add an idea') + b('rose','map','plan','Add a plan')
+    + `<span class="sep" aria-hidden="true"></span><button type="button" class="plus" data-act="quick" data-type="any" aria-label="Add anything" title="Add anything">${icon('plus', 20)}</button>`;
+}
+
+/* ---------------- shared bits ---------------- */
+const head = (over, title, controls) => `<div class="head"><div class="ttl"><span class="overline">${over}</span><h1>${title}</h1></div><div class="controls">${controls || ''}</div></div>`;
+const banner = () => S.sample ? `<div class="banner" role="note"><p>This is a sample week so you can see how Mind Bucket works. Change anything, or start with a clean slate.</p><button class="btn btn-secondary btn-sm" data-act="keep-sample">Keep sample</button><button class="btn btn-primary btn-sm" data-act="start-fresh">Start fresh</button></div>` : '';
+const seg = (act, items, cur) => `<div class="seg" role="group">${items.map(([v, l, c]) => `<button type="button" data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}${c != null ? `<span class="c">${c}</span>` : ''}</button>`).join('')}</div>`;
+const stat = (tone, v, l) => `<div class="stat ${tone === 'outline' ? 'outline' : 't-' + tone}"><b>${v}</b><span>${l}</span></div>`;
+function dropZones(list, emptyMsg) {
+  if (!list.length) return `<div class="list-empty">${emptyMsg}</div>`;
+  return list.map(o => { const k = ymd(o.date); const n = sessionsFor(o.b.id, k).length; return `<button type="button" class="dz" data-drop="${o.b.id}|${k}" data-act="open-occ" data-bid="${o.b.id}" data-date="${k}">${icon('plus', 16)}<span class="lbl">${esc(o.b.name)} · ${DAY_SHORT[o.date.getDay()]} ${fmtTime(o.s)}</span><small>${n ? plural(n, 'item') : 'Empty'}</small></button>`; }).join('');
+}
+function dragItem(kind, r, meta, cnt) {
+  const tone = kind === 'interest' ? r.tone : kind === 'todo' ? (TODO_TAGS[r.tag] || 'slate') : 'butter';
+  const ic = kind === 'interest' ? (r.icon || 'star') : kind === 'todo' ? 'checksq' : 'idea';
+  const name = kind === 'interest' ? r.name : kind === 'todo' ? r.title : r.text;
+  return `<div class="drag" draggable="true" data-drag="${kind}" data-id="${r.id}" title="Drag onto a bucket">
+    <span class="grip">${icon('grip', 16)}</span><span class="icirc t-${tone}">${icon(ic, 16)}</span>
+    <span class="txt"><b>${esc(name)}</b><small>${esc(meta)}</small></span>
+    ${cnt ? `<span class="cnt">${cnt}</span>` : ''}
+    <button class="icon-btn sm bare" data-act="schedule" data-kind="${kind}" data-id="${r.id}" aria-label="Pick a bucket for ${esc(name)}">${icon('calendar', 16)}</button>
+  </div>`;
+}
+function pill(s) {
+  return `<button type="button" class="pill${s.done ? ' done' : ''}" data-act="toggle-session" data-id="${s.id}" title="${s.done ? 'Mark not done' : 'Mark done'}"><span class="ring">${s.done ? icon('check', 10) : ''}</span><span>${esc(sessionName(s))}</span></button>`;
+}
+function agendaOcc(o, k) {
+  const items = sessionsFor(o.b.id, k);
+  const body = items.length
+    ? items.map(s => `<div class="line${s.done ? ' done' : ''}"><button type="button" data-act="toggle-session" data-id="${s.id}"><span class="check${s.done ? ' on' : ''}">${icon('check', 12)}</span><span>${esc(sessionName(s))}</span></button></div>`).join('')
+    : `<span class="faint">Free to fill. Drag an interest or to-do here.</span>`;
+  return `<div class="agenda t-${o.b.tone}" data-drop="${o.b.id}|${k}">
+    <div class="agenda-head"><button type="button" class="l" data-act="open-occ" data-bid="${o.b.id}" data-date="${k}" style="border:0;background:none;color:inherit;padding:0;font-weight:500">${icon('clock', 16)}<span>${esc(o.b.name)}</span></button><small>${fmtRange(o.s, o.e)}</small></div>
+    <div class="agenda-body">${body}</div></div>`;
+}
+
+/* ---------------- view: calendar ---------------- */
+function viewCalendar() {
+  const week = UI.calMode === 'week';
+  const t = today0();
+  const days = week ? weekDates(UI.weekOffset) : [addDays(t, UI.dayOffset)];
+  const { h0, h1 } = hourRange();
+  let over, title;
+  if (week) { over = `${rangeLabel(days[0], days[6])} ${days[6].getFullYear()}`; title = ({ '-1':'Last week', '0':'My week', '1':'Next week' })[UI.weekOffset] || `Week of ${days[0].getDate()} ${MON_SHORT[days[0].getMonth()]}`; }
+  else { over = fmtDayLong(days[0]); title = ({ '-1':'Yesterday', '0':'Today', '1':'Tomorrow' })[UI.dayOffset] || DAY_LONG[days[0].getDay()]; }
+  const controls = seg('cal-mode', [['day','Day'],['week','Week']], UI.calMode)
+    + `<div class="nav-group"><button class="icon-btn" data-act="cal-step" data-d="-1" aria-label="Previous ${week ? 'week' : 'day'}">${icon('chevL')}</button><button class="btn btn-secondary" data-act="cal-today">Today</button><button class="icon-btn" data-act="cal-step" data-d="1" aria-label="Next ${week ? 'week' : 'day'}">${icon('chevR')}</button></div>`
+    + `<button class="btn btn-primary" data-act="new-bucket">${icon('plus')}New bucket</button>`;
+  let body;
+  if (!S.buckets.length) {
+    body = `<div class="card empty"><h2>Start with a few buckets</h2><p class="muted">Buckets are the regular blocks of your day, like a slow morning, work hours or time for interests. Pick a template or make your own.</p>
+      <div class="tpl">${TEMPLATES.map((tp, i) => `<button type="button" class="t-${tp.tone}" data-act="add-template" data-i="${i}">${icon('plus', 14)} ${tp.name} · ${fmtRange(toMin(tp.start), toMin(tp.end))}</button>`).join('')}</div>
+      <button class="btn btn-primary" data-act="new-bucket">${icon('plus')}New bucket</button></div>`;
+  } else {
+    const H = h1 - h0;
+    const axis = Array.from({ length:H }, (_, i) => `<span style="top:${i * HR}px">${fmtTime((h0 + i) * 60)}</span>`).join('');
+    const heads = days.map(d => { const isT = ymd(d) === ymd(t); return `<button type="button" class="dhead${isT ? ' today' : ''}" data-act="goto-day" data-date="${ymd(d)}" aria-label="${fmtDayLong(d)}">${DAY_SHORT[d.getDay()]} <b>${d.getDate()}</b></button>`; }).join('');
+    const cols = days.map(d => dayCol(d, h0, h1, week)).join('');
+    body = `<div class="card cal-card"><div class="cal-scroll"><div class="cal-grid ${week ? 'week' : 'day'}" style="--cols:${days.length};--hours:${H}" data-h0="${h0}" data-h1="${h1}">
+      <div></div>${heads}<div class="axis" aria-hidden="true">${axis}</div>${cols}</div></div></div>`;
+  }
+  return head(over, title, controls) + banner() + body;
+}
+function dayCol(d, h0, h1, week) {
+  const k = ymd(d); const isT = k === ymd(today0());
+  const trip = tripOn(d);
+  let inner = '';
+  if (trip) {
+    inner = `<div class="blk trip t-${trip.tone}" role="button" tabindex="0" data-act="goto-plan" data-id="${trip.id}" style="top:2px;bottom:2px">${icon('plane', 18)}<div class="blk-title">On trip</div><div class="blk-time">${esc(trip.title)}</div><div class="blk-time">Buckets paused</div></div>`;
+  } else {
+    const occ = occurrencesOn(d).filter(o => o.e > h0 * 60 && o.s < h1 * 60);
+    inner = laneLayout(occ).map(r => block(r, k, h0, h1)).join('');
+    if (!week) inner += freeGaps(occ, h0, h1);
+  }
+  let now = '';
+  if (isT) { const n = new Date(); const m = n.getHours() * 60 + n.getMinutes(); if (m >= h0 * 60 && m <= h1 * 60) now = `<div class="now" style="top:${(m - h0 * 60) / 60 * HR}px"></div>`; }
+  return `<div class="dcol${isT ? ' is-today' : ''}" data-date="${k}">${inner}${now}</div>`;
+}
+function block(r, k, h0, h1) {
+  const o = r.o;
+  const s = Math.max(o.s, h0 * 60), e = Math.min(o.e, h1 * 60);
+  const top = (s - h0 * 60) / 60 * HR + 2, hgt = Math.max(22, (e - s) / 60 * HR - 4);
+  const items = sessionsFor(o.b.id, k);
+  const short = hgt < 64;
+  const w = 100 / r.of;
+  const style = `top:${top}px;height:${hgt}px;left:calc(${w * r.lane}% + ${r.lane ? 2 : 0}px);right:auto;width:calc(${w}% - ${r.of > 1 ? 2 : 0}px)`;
+  const label = fmtRange(o.s, o.e) + (short && items.length ? ` · ${plural(items.length, 'item')}` : '');
+  return `<div class="blk t-${o.b.tone}${short ? ' short' : ''}" role="button" tabindex="0" data-act="open-occ" data-bid="${o.b.id}" data-date="${k}" data-drop="${o.b.id}|${k}" style="${style}" aria-label="${esc(o.b.name)}, ${fmtRange(o.s, o.e)}, ${plural(items.length, 'item')}">
+    <div class="blk-title">${esc(o.b.name)}</div><div class="blk-time">${label}</div>
+    ${!short && items.length ? `<div class="blk-items">${items.map(pill).join('')}</div>` : ''}</div>`;
+}
+function freeGaps(occ, h0, h1) {
+  let cur = h0 * 60, out = '';
+  const gap = (a, b) => `<button type="button" class="free" data-act="new-bucket-at" data-s="${a}" data-e="${b}" style="top:${(a - h0 * 60) / 60 * HR + 2}px;height:${(b - a) / 60 * HR - 4}px">${icon('plus', 14)}Free ${dur(b - a)} · add a bucket</button>`;
+  for (const o of occ) { const s = Math.max(o.s, h0 * 60); if (s - cur >= 30) out += gap(cur, s); cur = Math.max(cur, Math.min(o.e, h1 * 60)); }
+  if (h1 * 60 - cur >= 30) out += gap(cur, h1 * 60);
+  return out;
+}
+function panelCalendar() {
+  const t = today0(); const k = ymd(t);
+  const wk = weekDates(0);
+  const { h0, h1 } = hourRange();
+  let used = 0; wk.forEach(d => { if (tripOn(d)) used += (h1 - h0) * 60; else occurrencesOn(d).forEach(o => { used += Math.max(0, Math.min(o.e, h1 * 60) - Math.max(o.s, h0 * 60)); }); });
+  const free = Math.max(0, (h1 - h0) * 60 * 7 - used);
+  const active = S.interests.filter(i => i.level !== 'parked');
+  const target = active.reduce((a, i) => a + (Number(i.perWeek) || 0), 0);
+  const done = active.reduce((a, i) => a + interestWeek(i).done, 0);
+  const open = S.todos.filter(x => !x.done).length;
+  const trip = tripOn(t);
+  const occ = occurrencesOn(t);
+  const todayList = trip ? `<div class="agenda t-${trip.tone}"><div class="agenda-head"><span class="l">${icon('plane', 16)}<span>On trip</span></span></div><div class="agenda-body">${esc(trip.title)}. Your buckets are paused.</div></div>`
+    : occ.length ? occ.map(o => agendaOcc(o, k)).join('') : `<div class="list-empty">No buckets today. Enjoy the free day, or add one.</div>`;
+  const toPlace = active.map(i => ({ i, w: interestWeek(i) })).filter(x => x.w.done + x.w.planned < (Number(x.i.perWeek) || 0));
+  const todoPlace = S.todos.filter(x => !x.done && !openSessionFor('todo', x.id)).slice(0, 3);
+  return `<div class="phead"><h2>Today</h2><span>${DAY_SHORT[t.getDay()]}, ${t.getDate()} ${MON_SHORT[t.getMonth()]}</span></div>
+    <div class="stats">${stat('sky', Math.round(free / 60) + 'h', 'Free this week')}${stat('mint', `${done}/${target}`, 'Sessions done')}${stat('butter', open, 'Open to-dos')}</div>
+    <section><span class="overline">Your buckets today</span>${todayList}</section>
+    <section><span class="overline">Interests to place</span>${toPlace.length ? toPlace.map(x => dragItem('interest', x.i, `${dur(x.i.minutes || 30)} sessions`, `${x.w.done + x.w.planned} of ${x.i.perWeek}`)).join('') : `<div class="list-empty">Every interest has its sessions for this week.</div>`}
+      <span class="muted">Drag onto a bucket, or tap the calendar icon to pick one.</span></section>
+    ${todoPlace.length ? `<section><span class="overline">To-dos without a time</span>${todoPlace.map(x => dragItem('todo', x, x.tag, '')).join('')}</section>` : ''}`;
+}
+
+/* ---------------- view: interests ---------------- */
+function viewInterests() {
+  const all = S.interests;
+  const n = l => all.filter(i => i.level === l).length;
+  const list = UI.iFilter === 'all' ? all : all.filter(i => i.level === UI.iFilter);
+  const controls = seg('i-filter', [['all','All'],['focus','Focus',n('focus')],['maintain','Maintain',n('maintain')],['parked','Parked',n('parked')]], UI.iFilter)
+    + `<button class="btn btn-primary" data-act="quick" data-type="interest">${icon('plus')}Add interest</button>`;
+  const body = list.length ? `<div class="grid-cards">${list.map(icard).join('')}</div>`
+    : `<div class="card empty"><h2>${all.length ? 'Nothing here' : 'What do you want to make time for?'}</h2><p class="muted">${all.length ? 'No interests at this level yet.' : 'Add the things you want to learn or try, like piano, cycling or cooking. Then drag them into your buckets.'}</p><button class="btn btn-primary" data-act="quick" data-type="interest">${icon('plus')}Add interest</button></div>`;
+  return head(`${plural(all.length, 'interest')} · ${n('focus')} in focus`, 'My interests', controls) + banner() + body;
+}
+function icard(i) {
+  const w = interestWeek(i); const per = Number(i.perWeek) || 1; const parked = i.level === 'parked';
+  const total = Math.min(7, Math.max(per, w.done + w.planned));
+  const segs = Array.from({ length: total }, (_, x) => `<i class="${x < w.done ? 'done' : x < w.done + w.planned ? 'planned' : ''}"></i>`).join('');
+  const lv = LEVELS[i.level] || LEVELS.maintain;
+  return `<article class="card icard" draggable="true" data-drag="interest" data-id="${i.id}">
+    <div class="top-row"><span class="icirc lg t-${i.tone}">${icon(i.icon || 'star', 20)}</span><button class="icon-btn sm ghost" data-act="edit-interest" data-id="${i.id}" aria-label="Edit ${esc(i.name)}">${icon('more')}</button></div>
+    <div class="txt"><h2>${esc(i.name)}</h2>${i.note ? `<p class="muted">${esc(i.note)}</p>` : ''}</div>
+    <div class="prog"><div class="prog-row"><span>This week · ${dur(Number(i.minutes) || 30)} sessions</span><b>${parked ? 'Paused' : `${w.done} of ${per} done${w.planned ? ` · ${w.planned} planned` : ''}`}</b></div><div class="segs">${segs}</div></div>
+    <div class="foot"><span class="chip t-${lv.tone}">${lv.label}</span>${parked ? `<button class="btn btn-secondary btn-sm" data-act="resume-interest" data-id="${i.id}">Resume</button>` : `<button class="btn btn-secondary btn-sm" data-act="schedule" data-kind="interest" data-id="${i.id}">${icon('plus', 16)}Add to routine</button>`}</div>
+  </article>`;
+}
+function panelInterests() {
+  const act = S.interests.filter(i => i.level !== 'parked');
+  const rows = act.map(i => { const w = interestWeek(i); const m = Number(i.minutes) || 30; return { i, target: (Number(i.perWeek) || 0) * m, d: w.done * m, p: (w.done + w.planned) * m }; });
+  const max = Math.max(1, ...rows.map(r => Math.max(r.target, r.p)));
+  return `<section><h2>Plan it in</h2><p class="muted">Drag a card onto a bucket with free time, or tap a bucket to pick what goes in.</p></section>
+    <section><span class="overline">Coming up</span>${dropZones(upcoming(5), 'No buckets coming up. Create one on the calendar.')}<button type="button" class="dz" data-act="new-bucket">${icon('plus', 16)}<span class="lbl">Create a new bucket</span></button></section>
+    ${rows.length ? `<section><span class="overline">Hours this week · done / goal</span><div class="bal">${rows.map(r => `<div class="bal-row t-${r.i.tone}"><span>${esc(r.i.name)}</span><span class="bal-track"><i class="pl" style="width:${r.p / max * 100}%"></i><i class="dn" style="width:${r.d / max * 100}%"></i></span><span class="v">${hrs(r.d)} / ${hrs(r.target)}</span></div>`).join('')}</div></section>` : ''}`;
+}
+
+/* ---------------- view: to-do ---------------- */
+function viewTodo() {
+  const T = S.todos.map(x => ({ x, st: todoState(x) }));
+  const today = T.filter(r => r.st === 'today').map(r => r.x).sort((a, b) => (a.due || '').localeCompare(b.due || ''));
+  const later = T.filter(r => r.st === 'later').map(r => r.x).sort((a, b) => (a.due || '9').localeCompare(b.due || '9'));
+  const done = T.filter(r => r.st === 'done').map(r => r.x).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const doneToday = done.filter(x => x.doneAt && x.doneAt >= today0().getTime()).length;
+  const controls = seg('t-filter', [['all','All'],['today','Today',today.length],['later','Later',later.length],['done','Done']], UI.tFilter)
+    + `<button class="btn btn-primary" data-act="focus" data-target="cap-todo">${icon('plus')}Add to-do</button>`;
+  const cap = `<form class="card capture" data-form="todo-capture">${icon('plus', 20)}<input type="text" id="cap-todo" name="title" placeholder="Jot something down… e.g. Call the bank tomorrow" autocomplete="off" aria-label="New to-do">
+    <select name="tag" id="cap-todo-tag" aria-label="Tag">${Object.keys(TODO_TAGS).map(g => `<option>${g}</option>`).join('')}</select>
+    ${seg('cap-when', [['today','Today'],['later','Later']], UI.todoWhen)}<button class="btn btn-primary btn-sm" type="submit">Save</button></form>`;
+  const sec = (label, arr, empty) => `<section class="list"><div class="list-head"><h3>${label}</h3><span>${arr.length}</span></div>${arr.length ? arr.map(todoRow).join('') : `<div class="list-empty">${empty}</div>`}</section>`;
+  const f = UI.tFilter;
+  return head(`${today.length + later.length} open · ${doneToday} done today`, 'To-do & pending', controls) + banner() + cap
+    + (f === 'all' || f === 'today' ? sec('Today', today, 'Nothing due today.') : '')
+    + (f === 'all' || f === 'later' ? sec('Later', later, 'Nothing waiting for later.') : '')
+    + (f === 'all' || f === 'done' ? sec('Done', f === 'done' ? done : done.slice(0, 5), 'Ticked-off to-dos land here.') : '');
+}
+function todoRow(x) {
+  const st = todoState(x); const k = ymd(today0());
+  const ses = openSessionFor('todo', x.id); const b = ses && byId(S.buckets, ses.bucketId);
+  let meta;
+  if (st === 'done') { const d = x.doneAt ? new Date(x.doneAt) : null; meta = d ? (ymd(d) === k ? `Done · ${fmtTime(d.getHours() * 60 + d.getMinutes())}` : `Done · ${fmtDay(d)}`) : 'Done'; }
+  else if (x.due && x.due < k) meta = `Overdue · ${fmtDay(parseYmd(x.due))}`;
+  else if (x.due === k) meta = 'Today';
+  else if (x.due) meta = fmtDay(parseYmd(x.due));
+  else meta = 'Someday';
+  if (b && st !== 'done') meta += ` · ${b.name} ${fmtTime(toMin(b.start))}`;
+  const late = st !== 'done' && x.due && x.due < k;
+  return `<div class="row${st === 'done' ? ' is-done' : ''}" ${st === 'done' ? '' : `draggable="true" data-drag="todo" data-id="${x.id}"`}>
+    <button class="check${x.done ? ' on' : ''}" data-act="toggle-todo" data-id="${x.id}" aria-label="${x.done ? 'Mark not done' : 'Mark done'}: ${esc(x.title)}">${icon('check', 14)}</button>
+    <div class="rt"><b>${esc(x.title)}</b><small class="${late ? 'late' : ''}">${esc(meta)}</small></div>
+    <span class="chip t-${TODO_TAGS[x.tag] || 'slate'} hide-sm">${esc(x.tag || 'General')}</span>
+    <div class="acts">${st !== 'done' ? `<button class="icon-btn sm bare" data-act="schedule" data-kind="todo" data-id="${x.id}" aria-label="Give it a time">${icon('calendar', 16)}</button>` : ''}<button class="icon-btn sm bare" data-act="edit-todo" data-id="${x.id}" aria-label="Edit ${esc(x.title)}">${icon('more', 16)}</button></div></div>`;
+}
+function panelTodo() {
+  const k = ymd(today0()); const wkStart = weekDates(0)[0].getTime();
+  const open = S.todos.filter(x => !x.done).length;
+  const doneWk = S.todos.filter(x => x.done && x.doneAt >= wkStart).length;
+  const over = S.todos.filter(x => !x.done && x.due && x.due < k).length;
+  return `<div class="phead"><h2>Overview</h2><span>This week</span></div>
+    <div class="stats">${stat('butter', open, 'Open')}${stat('mint', doneWk, 'Done')}${stat('outline', over, 'Overdue')}</div>
+    <section><span class="overline">Give a to-do a time</span><p class="muted">Drag a to-do into a bucket to do it then.</p>${dropZones(upcoming(4), 'No buckets coming up.')}</section>
+    <div class="agenda t-mint"><div class="agenda-head"><span class="l">${icon('idea', 16)}<span>Two-minute rule</span></span><small>Tip</small></div><div class="agenda-body">If it takes under two minutes, do it now and tick it off. Everything else gets a bucket.</div></div>`;
+}
+
+/* ---------------- view: purchases ---------------- */
+function viewPurchases() {
+  const t = today0(); const m0 = monthKey(t), m2 = monthKey(t, 2);
+  const open = S.purchases.filter(p => !p.bought);
+  const controls = seg('p-filter', [['all','All'],['need','Need'],['want','Want']], UI.pFilter)
+    + `<button class="btn btn-primary" data-act="quick" data-type="purchase">${icon('plus')}Add item</button>`;
+  const col = kind => {
+    const items = S.purchases.filter(p => p.kind === kind).sort((a, b) => (a.bought - b.bought) || ((a.month || '9999') .localeCompare(b.month || '9999')));
+    const op = items.filter(p => !p.bought);
+    const total = op.reduce((a, p) => a + (Number(p.price) || 0), 0);
+    return `<div class="card col"><div class="col-head"><div class="r"><div class="l"><span class="chip t-${kind === 'need' ? 'mint' : 'rose'}">${kind === 'need' ? 'Need' : 'Want'}</span><span class="faint">${op.length} open</span></div><h3 class="num">${money(total)}</h3></div>
+      <p class="muted">${kind === 'need' ? 'Things you will run out of or must replace.' : 'Nice to have. Give each one 30 days first.'}</p></div>
+      ${items.length ? items.map(purchaseRow).join('') : `<div class="list-empty">Nothing on this list yet.</div>`}
+      <button class="btn btn-ghost btn-sm" data-act="quick" data-type="purchase" data-kind="${kind}" style="align-self:flex-start">${icon('plus', 16)}Add a ${kind}</button></div>`;
+  };
+  const cols = UI.pFilter === 'all' ? `<div class="cols">${col('need')}${col('want')}</div>` : `<div class="cols one">${col(UI.pFilter)}</div>`;
+  const groups = [[m0, monthLong(m0)], [monthKey(t, 1), monthLong(monthKey(t, 1))], [m2, monthLong(m2)]];
+  const later = open.filter(p => p.month && p.month > m2);
+  const sum = (arr, kind) => arr.filter(p => p.kind === kind).reduce((a, p) => a + (Number(p.price) || 0), 0);
+  const blocks = groups.map(([k, l]) => ({ l, arr: open.filter(p => p.month === k || (k === m0 && p.month && p.month < m0)) }));
+  if (later.length) blocks.push({ l:'Later', arr: later });
+  blocks.push({ l:'Someday', arr: open.filter(p => !p.month) });
+  const max = Math.max(1, ...blocks.map(b => sum(b.arr, 'need') + sum(b.arr, 'want')));
+  const plan = `<div class="card pad"><div class="head" style="align-items:center"><h3>Plan by month</h3><div class="legend"><span><i style="background:var(--mint-fg)"></i>Need</span><span><i style="background:var(--rose-ac)"></i>Want</span></div></div>
+    <div class="months">${blocks.map(b => { const n = sum(b.arr, 'need'), w = sum(b.arr, 'want'); const cn = b.arr.filter(p => p.kind === 'need').length, cw = b.arr.length - cn;
+      return `<div class="month"><span class="muted">${b.l}</span><h3 class="num">${money(n + w)}</h3><div class="mbar">${n ? `<i style="width:${n / max * 100}%;background:var(--mint-fg)"></i>` : ''}${w ? `<i style="width:${w / max * 100}%;background:var(--rose-ac)"></i>` : ''}</div><small class="faint">${b.arr.length ? [cn ? `${cn} need` : '', cw ? `${cw} want` : ''].filter(Boolean).join(' · ') : 'Nothing planned'}</small></div>`; }).join('')}</div></div>`;
+  return head(`Next 3 months · ${plural(open.length, 'item')}`, 'Purchases', controls) + banner() + cols + plan;
+}
+function purchaseRow(p) {
+  const link = safeLink(p.link);
+  const meta = [money(p.price), p.note].filter(Boolean).join(' · ');
+  return `<div class="row in${p.bought ? ' is-done' : ''}">
+    <button class="check${p.bought ? ' on' : ''}" data-act="toggle-bought" data-id="${p.id}" aria-label="${p.bought ? 'Mark not bought' : 'Mark bought'}: ${esc(p.name)}">${icon('check', 14)}</button>
+    <div class="rt"><b>${esc(p.name)}</b><small>${p.bought ? 'Bought · ' : ''}${esc(meta)}</small></div>
+    <span class="chip outline">${monthShort(p.month)}</span>
+    <div class="acts">${link ? `<a class="icon-btn sm bare" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="Open link for ${esc(p.name)}">${icon('link', 16)}</a>` : ''}<button class="icon-btn sm bare" data-act="edit-purchase" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">${icon('more', 16)}</button></div></div>`;
+}
+function panelPurchases() {
+  const t = today0(); const m0 = monthKey(t);
+  const open = S.purchases.filter(p => !p.bought);
+  const need = open.filter(p => p.kind === 'need').reduce((a, p) => a + (Number(p.price) || 0), 0);
+  const want = open.filter(p => p.kind === 'want').reduce((a, p) => a + (Number(p.price) || 0), 0);
+  const due = open.filter(p => p.month && p.month <= m0).length;
+  return `<div class="phead"><h2>Summary</h2><span>${MON_SHORT[t.getMonth()]} – ${MON_SHORT[(t.getMonth() + 2) % 12]}</span></div>
+    <div class="stats">${stat('mint', kfmt(need), 'Need · BDT')}${stat('butter', kfmt(want), 'Want · BDT')}${stat('outline', due, 'Due this month')}</div>
+    <section><span class="overline">Add from a link</span><form class="field-inline" data-form="link-capture">${icon('link', 18)}<input type="url" id="cap-link" name="link" placeholder="Paste a product link" aria-label="Product link" autocomplete="off"><button class="btn btn-soft btn-sm" type="submit" name="kind" value="need">Need</button><button class="btn btn-secondary btn-sm" type="submit" name="kind" value="want">Want</button></form></section>
+    <div class="agenda t-rose"><div class="agenda-head"><span class="l">${icon('wallet', 16)}<span>Want-list rule</span></span><small>Tip</small></div><div class="agenda-body">Wait 30 days before buying a want. Still want it? Give it a month in the plan.</div></div>`;
+}
+
+/* ---------------- view: ideas ---------------- */
+function viewIdeas() {
+  const q = UI.ideaQuery.trim().toLowerCase();
+  const list = S.ideas.filter(d => !q || (d.text + ' ' + d.tag).toLowerCase().includes(q));
+  const cols = ['new','planned','done'].concat(UI.showDropped ? ['dropped'] : []);
+  const dropped = S.ideas.filter(d => d.status === 'dropped').length;
+  const controls = `<label class="search">${icon('search', 18)}<input type="search" id="idea-search" data-input="idea-search" placeholder="Search ideas" value="${esc(UI.ideaQuery)}" aria-label="Search ideas"></label>
+    <button class="btn btn-primary" data-act="focus" data-target="cap-idea">${icon('plus')}New idea</button>`;
+  const cap = `<form class="card capture" data-form="idea-capture">${icon('idea', 20)}<input type="text" id="cap-idea" name="text" placeholder="Got an idea? Write it down before it’s gone…" autocomplete="off" aria-label="New idea">
+    <select name="tag" id="cap-idea-tag" aria-label="Tag">${IDEA_TAGS.map(g => `<option>${g}</option>`).join('')}</select><button class="btn btn-primary btn-sm" type="submit">Save</button></form>`;
+  const board = `<div class="board" style="--cols:${cols.length}">${cols.map(st => { const arr = list.filter(d => d.status === st).sort((a, b) => b.createdAt - a.createdAt); const meta = IDEA_STATUS[st];
+    return `<div class="colm"><div class="colm-head t-${meta.tone}"><i></i><h3>${meta.label}</h3><span>${arr.length}</span></div>${arr.length ? arr.map(ideaCard).join('') : `<div class="list-empty">${q ? 'No matches.' : st === 'new' ? 'New ideas show up here.' : 'Nothing here yet.'}</div>`}</div>`; }).join('')}</div>`;
+  const toggle = dropped ? `<button class="btn btn-ghost btn-sm" data-act="toggle-dropped" style="align-self:flex-start">${UI.showDropped ? 'Hide' : 'Show'} dropped ideas (${dropped})</button>` : '';
+  return head(`${plural(S.ideas.length, 'idea')} · ${S.ideas.filter(d => d.status === 'planned').length} planned`, 'Ideas', controls) + banner() + cap + board + toggle;
+}
+function ideaCard(d) {
+  const meta = IDEA_STATUS[d.status] || IDEA_STATUS.new;
+  const ses = openSessionFor('idea', d.id); const b = ses && byId(S.buckets, ses.bucketId);
+  const when = b ? `${DAY_SHORT[parseYmd(ses.date).getDay()]} ${fmtTime(toMin(b.start))}` : fmtDay(new Date(d.createdAt)).replace(/^\w+ /, '');
+  return `<button type="button" class="agenda t-${meta.tone}${UI.ideaSel === d.id ? ' sel' : ''}" data-act="select-idea" data-id="${d.id}" draggable="true" data-drag="idea" aria-pressed="${UI.ideaSel === d.id}">
+    <span class="agenda-head"><span class="l">${icon('idea', 16)}<span>${esc(d.tag || 'Idea')}</span></span><small>${esc(when)}</small></span>
+    <span class="agenda-body">${esc(d.text)}</span></button>`;
+}
+function panelIdeas() {
+  const d = UI.ideaSel && byId(S.ideas, UI.ideaSel);
+  if (!d) return `<section><h2>Plan an idea</h2><p class="muted">Pick an idea on the board to turn it into a to-do or give it a slot in one of your buckets.</p></section>
+    <div class="agenda t-butter"><div class="agenda-head"><span class="l">${icon('idea', 16)}<span>How ideas move</span></span></div><div class="agenda-body">New ideas wait here until you plan them. Scheduling one moves it to Planned, and ticking it off in the calendar moves it to Done.</div></div>`;
+  const meta = IDEA_STATUS[d.status] || IDEA_STATUS.new;
+  return `<div class="phead"><h2>Plan this idea</h2><button class="icon-btn sm ghost" data-act="close-idea" aria-label="Close">${icon('x', 16)}</button></div>
+    <div class="agenda t-${meta.tone}"><div class="agenda-head"><span class="l">${icon('idea', 16)}<span>${esc(d.tag || 'Idea')}</span></span><small>${fmtDay(new Date(d.createdAt))}</small></div><div class="agenda-body">${esc(d.text)}</div></div>
+    <section><span class="overline">Turn it into</span>
+      <button class="btn btn-secondary btn-block" data-act="idea-to-todo" data-id="${d.id}">${icon('checksq')}Add as a to-do</button>
+      <button class="btn btn-primary btn-block" data-act="schedule" data-kind="idea" data-id="${d.id}">${icon('calendar')}Schedule in a bucket</button></section>
+    <section><span class="overline">Status</span><div class="tpl">${Object.entries(IDEA_STATUS).map(([k, v]) => `<button type="button" class="chip${d.status === k ? ' dark' : ''}" data-act="idea-status" data-id="${d.id}" data-v="${k}" aria-pressed="${d.status === k}">${v.label}</button>`).join('')}</div></section>
+    <section><div class="tpl"><button class="btn btn-ghost btn-sm" data-act="edit-idea" data-id="${d.id}">${icon('edit', 16)}Edit</button><button class="btn btn-ghost btn-sm" data-act="delete-idea" data-id="${d.id}">${icon('trash', 16)}<span>Delete</span></button></div></section>`;
+}
+
+/* ---------------- view: plans ---------------- */
+function planDays(p) { if (!p.start || !p.end) return 0; return Math.max(1, daysBetween(parseYmd(p.start), parseYmd(p.end)) + 1); }
+function viewPlans() {
+  const k = ymd(today0());
+  const plans = S.plans.slice().sort((a, b) => (a.start || '9').localeCompare(b.start || '9'));
+  const upcomingN = plans.filter(p => !p.end || p.end >= k).length;
+  if (!UI.planSel || !byId(S.plans, UI.planSel)) UI.planSel = plans[0] ? plans[0].id : null;
+  const controls = `<button class="btn btn-primary" data-act="quick" data-type="plan">${icon('plus')}New plan</button>`;
+  if (!plans.length) return head('Trips and bigger plans', 'Tours & plans', controls) + banner() + `<div class="card empty"><h2>Plan your next trip</h2><p class="muted">Add a trip or a bigger plan with dates, a day-by-day outline and a checklist. Mind Bucket can pause your regular buckets while you are away.</p><button class="btn btn-primary" data-act="quick" data-type="plan">${icon('plus')}New plan</button></div>`;
+  const cards = `<div class="plans">${plans.map(p => { const n = planDays(p); const st = PLAN_STATUS[p.status] || PLAN_STATUS.idea; const cd = p.checklist.filter(c => c.done).length;
+    return `<button type="button" class="card plan${UI.planSel === p.id ? ' sel' : ''}" data-act="select-plan" data-id="${p.id}" aria-pressed="${UI.planSel === p.id}">
+      <span class="cover t-${p.tone}"><span class="icirc lg" style="color:var(--t-fg)">${icon('plane', 20)}</span><span class="datepill">${p.start && p.end ? rangeLabel(parseYmd(p.start), parseYmd(p.end)) : 'Dates not set'}</span></span>
+      <span class="t"><span class="h2">${esc(p.title)}</span><span class="meta">${icon('pin', 14)}${esc(p.place || 'Somewhere')}${n ? ` · ${plural(n, 'day')}` : ''}</span></span>
+      <span class="foot"><span class="chip ${UI.planSel === p.id ? 'dark' : 't-' + st.tone}">${st.label}</span><small>Checklist ${cd} / ${p.checklist.length}</small></span></button>`; }).join('')}</div>`;
+  const p = byId(S.plans, UI.planSel); const n = planDays(p);
+  const days = n ? Array.from({ length: n }, (_, i) => { const d = addDays(parseYmd(p.start), i);
+    return `<div class="dayrow"><span class="badge t-${p.tone}"><small>Day</small><b>${i + 1}</b></span><span class="dt"><input type="text" id="pday-${p.id}-${i}" data-change="plan-day" data-id="${p.id}" data-i="${i}" value="${esc(p.days[i] || '')}" placeholder="What happens this day?" aria-label="Day ${i + 1} plan"><small>${fmtDay(d)}</small></span></div>`; }).join('')
+    : `<div class="list-empty">Set the dates to plan each day.</div>`;
+  const detail = `<div class="card pad"><div class="head" style="align-items:center"><div class="ttl"><span class="overline">Day by day</span><h2>${esc(p.title)}</h2></div><button class="btn btn-secondary btn-sm" data-act="edit-plan" data-id="${p.id}">${icon('edit', 16)}Edit plan</button></div><div class="days">${days}</div></div>`;
+  return head(`${plural(upcomingN, 'upcoming plan')}`, 'Tours & plans', controls) + banner() + cards + detail;
+}
+function panelPlans() {
+  const p = UI.planSel && byId(S.plans, UI.planSel);
+  if (!p) return `<section><h2>Plans</h2><p class="muted">Pick a plan to see its checklist.</p></section>`;
+  const cd = p.checklist.filter(c => c.done).length;
+  return `<div class="phead"><h2>${esc(p.title)}</h2></div>
+    <div class="stats">${stat(p.tone === 'slate' ? 'sky' : p.tone, planDays(p) || '–', 'Days')}${stat('mint', `${cd}/${p.checklist.length}`, 'Checklist')}${stat('butter', p.budget ? kfmt(p.budget) : '–', 'Budget · BDT')}</div>
+    <button type="button" class="switch" data-act="toggle-pause" data-id="${p.id}" aria-pressed="${!!p.pause}"><span><b style="font-weight:500">Pause my buckets</b><small>Hide regular buckets on the calendar during this trip</small></span><span class="k" aria-hidden="true"></span></button>
+    <section><span class="overline">Checklist</span>
+      ${p.checklist.map(c => `<div class="row"><button class="check${c.done ? ' on' : ''}" data-act="toggle-check" data-id="${p.id}" data-c="${c.id}" aria-label="${c.done ? 'Untick' : 'Tick'}: ${esc(c.text)}">${icon('check', 14)}</button><div class="rt"><b style="${c.done ? 'text-decoration:line-through;color:var(--ink-3)' : ''}">${esc(c.text)}</b></div><button class="icon-btn sm bare" data-act="del-check" data-id="${p.id}" data-c="${c.id}" aria-label="Remove ${esc(c.text)}">${icon('x', 16)}</button></div>`).join('')}
+      <form class="field-inline" data-form="check-add" data-id="${p.id}">${icon('plus', 18)}<input type="text" id="check-add-${p.id}" name="text" placeholder="Add to the checklist" aria-label="Checklist item" autocomplete="off"><button class="btn btn-secondary btn-sm" type="submit">Add</button></form></section>`;
+}
+
+/* ---------------- modals ---------------- */
+function mhead(title, sub) { return `<div class="mhead"><div><h2>${title}</h2>${sub ? `<p class="muted">${sub}</p>` : ''}</div><button type="button" class="icon-btn sm ghost" data-act="close-modal" aria-label="Close">${icon('x', 16)}</button></div>`; }
+const field = (label, inner) => `<label class="field"><span>${label}</span>${inner}</label>`;
+const toneOpts = (name, cur) => `<fieldset class="field"><legend>Colour</legend><div class="opts swatches">${TONES.map(t => `<label class="t-${t}"><input type="radio" name="${name}" value="${t}" ${cur === t ? 'checked' : ''} aria-label="${t}"><span class="o"></span></label>`).join('')}</div></fieldset>`;
+const delBtn = (act, id) => `<button type="button" class="btn btn-ghost btn-sm" data-act="${act}" data-id="${id}">${icon('trash', 16)}<span>Delete</span></button>`;
+const foot = (left, submit) => `<p class="err" aria-live="polite"></p><div class="mfoot">${left || ''}<div class="r"><button type="button" class="btn btn-secondary" data-act="close-modal">Cancel</button><button type="submit" class="btn btn-primary">${submit}</button></div></div>`;
+
+function renderModal() {
+  const m = UI.modal; const root = $('#modal-root');
+  if (!m) { root.innerHTML = ''; return; }
+  let html = '';
+  if (m.type === 'bucket') {
+    const b = m.id ? byId(S.buckets, m.id) : { name:'', tone:'lavender', start: m.start || '09:00', end: m.end || '10:00', days: m.days || [] };
+    const order = Array.from({ length:7 }, (_, i) => (Number(S.settings.weekStart) + i) % 7);
+    html = `<form data-form="bucket">${mhead(m.id ? 'Edit bucket' : 'New bucket', 'A regular block of your day, like a slow morning or work hours.')}
+      ${field('Name', `<input name="name" id="f-bname" required maxlength="40" value="${esc(b.name)}" placeholder="e.g. Slow morning">`)}
+      <div class="two">${field('Starts', `<input type="time" name="start" id="f-bstart" step="900" required value="${b.start}">`)}${field('Ends', `<input type="time" name="end" id="f-bend" step="900" required value="${b.end}">`)}</div>
+      <fieldset class="field"><legend>Repeats on</legend><div class="opts">${order.map(d => `<label><input type="checkbox" name="days" value="${d}" ${b.days.includes(d) ? 'checked' : ''}><span class="o">${DAY_SHORT[d]}</span></label>`).join('')}</div></fieldset>
+      ${toneOpts('tone', b.tone)}${foot(m.id ? delBtn('delete-bucket', m.id) : '', 'Save bucket')}</form>`;
+  } else if (m.type === 'occ') {
+    const b = byId(S.buckets, m.bid); if (!b) { UI.modal = null; root.innerHTML = ''; return; }
+    const d = parseYmd(m.date); const items = sessionsFor(b.id, m.date);
+    const opts = [];
+    S.interests.filter(i => i.level !== 'parked').forEach(i => opts.push(`<option value="interest:${i.id}">Interest · ${esc(i.name)}</option>`));
+    S.todos.filter(x => !x.done).forEach(x => opts.push(`<option value="todo:${x.id}">To-do · ${esc(x.title)}</option>`));
+    S.ideas.filter(x => x.status === 'new' || x.status === 'planned').forEach(x => opts.push(`<option value="idea:${x.id}">Idea · ${esc(x.text.slice(0, 48))}</option>`));
+    html = `<div class="mbody">${mhead(esc(b.name), `${fmtDayLong(d)} · ${fmtRange(toMin(b.start), toMin(b.end))}`)}
+      <div class="list">${items.length ? items.map(s => `<div class="row in"><button class="check${s.done ? ' on' : ''}" data-act="toggle-session" data-id="${s.id}" aria-label="${s.done ? 'Mark not done' : 'Mark done'}">${icon('check', 14)}</button><div class="rt"><b style="${s.done ? 'text-decoration:line-through;color:var(--ink-3)' : ''}">${esc(sessionName(s))}</b><small>${s.kind === 'interest' ? 'Interest' : s.kind === 'todo' ? 'To-do' : 'Idea'}</small></div><button class="icon-btn sm bare" data-act="remove-session" data-id="${s.id}" aria-label="Remove from bucket">${icon('x', 16)}</button></div>`).join('') : `<div class="list-empty">Nothing planned in this bucket yet.</div>`}</div>
+      ${opts.length ? `<form data-form="occ-add" style="padding:0;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap">${field('Add to this bucket', `<select name="item" id="f-occ-item">${opts.join('')}</select>`).replace('class="field"', 'class="field" style="flex:1;min-width:200px"')}<button class="btn btn-primary" type="submit">Add</button></form>` : ''}
+      <div class="mfoot"><button type="button" class="btn btn-ghost btn-sm" data-act="edit-bucket" data-id="${b.id}">${icon('edit', 16)}Edit bucket</button><div class="r"><button type="button" class="btn btn-secondary" data-act="close-modal">Done</button></div></div></div>`;
+  } else if (m.type === 'schedule') {
+    const r = m.kind === 'interest' ? byId(S.interests, m.id) : m.kind === 'todo' ? byId(S.todos, m.id) : byId(S.ideas, m.id);
+    if (!r) { UI.modal = null; root.innerHTML = ''; return; }
+    const name = m.kind === 'interest' ? r.name : m.kind === 'todo' ? r.title : 'this idea';
+    const t = today0(); const dates = Array.from({ length:14 }, (_, i) => addDays(t, i));
+    const d = parseYmd(m.date); const trip = tripOn(d); const occ = occurrencesOn(d);
+    html = `<form data-form="schedule">${mhead(`Add ${esc(name)} to a bucket`, 'Pick a day, then the bucket it goes in.')}
+      <div class="daychips" role="group" aria-label="Day">${dates.map(x => `<button type="button" data-act="sch-day" data-date="${ymd(x)}" aria-pressed="${ymd(x) === m.date}">${DAY_SHORT[x.getDay()]}<b>${x.getDate()}</b></button>`).join('')}</div>
+      <div class="pick" role="radiogroup" aria-label="Bucket">${trip ? `<div class="note">You are on “${esc(trip.title)}” that day, so your buckets are paused.</div>` : occ.length ? occ.map((o, i) => `<label class="t-${o.b.tone}"><input type="radio" name="bid" value="${o.b.id}" ${i === 0 ? 'checked' : ''}>${esc(o.b.name)}<small>${fmtRange(o.s, o.e)} · ${plural(sessionsFor(o.b.id, m.date).length, 'item')}</small></label>`).join('') : `<div class="note">No buckets on ${DAY_LONG[d.getDay()]}. <button type="button" class="btn btn-ghost btn-sm" data-act="new-bucket">Create one</button></div>`}</div>
+      ${foot('', 'Add to bucket')}</form>`;
+  } else if (m.type === 'interest') {
+    const i = m.id ? byId(S.interests, m.id) : { name:'', note:'', tone:'lavender', icon:'star', level:'focus', perWeek:2, minutes:45 };
+    html = `<form data-form="interest">${mhead(m.id ? 'Edit interest' : 'New interest', 'Something you want to learn or try.')}
+      ${field('Name', `<input name="name" id="f-iname" required maxlength="40" value="${esc(i.name)}" placeholder="e.g. Learn piano">`)}
+      ${field('Note', `<input name="note" id="f-inote" maxlength="120" value="${esc(i.note)}" placeholder="What does a good session look like?">`)}
+      <fieldset class="field"><legend>Level</legend><div class="opts">${Object.entries(LEVELS).map(([k, v]) => `<label><input type="radio" name="level" value="${k}" ${i.level === k ? 'checked' : ''}><span class="o">${v.label}</span></label>`).join('')}</div></fieldset>
+      <div class="two">${field('Sessions per week', `<input type="number" name="perWeek" id="f-iper" min="1" max="7" required value="${i.perWeek}">`)}${field('Minutes per session', `<input type="number" name="minutes" id="f-imin" min="5" max="300" step="5" required value="${i.minutes}">`)}</div>
+      <fieldset class="field"><legend>Icon</legend><div class="opts icons">${INTEREST_ICONS.map(n => `<label><input type="radio" name="icon" value="${n}" ${i.icon === n ? 'checked' : ''} aria-label="${n}"><span class="o">${icon(n, 18)}</span></label>`).join('')}</div></fieldset>
+      ${toneOpts('tone', i.tone)}
+      <p class="muted">Focus: up to two interests you are really pushing this month. Maintain: keep a small weekly habit. Parked: paused for now.</p>
+      ${foot(m.id ? delBtn('delete-interest', m.id) : '', 'Save interest')}</form>`;
+  } else if (m.type === 'todo') {
+    const x = m.id ? byId(S.todos, m.id) : { title:'', tag:'General', due: ymd(today0()) };
+    const k = ymd(today0());
+    const when = !x.due ? 'later' : x.due === k ? 'today' : 'date';
+    html = `<form data-form="todo">${mhead(m.id ? 'Edit to-do' : 'New to-do')}
+      ${field('What needs doing?', `<input name="title" id="f-ttitle" required maxlength="120" value="${esc(x.title)}" placeholder="e.g. Pay the electricity bill">`)}
+      <div class="two">${field('Tag', `<select name="tag" id="f-ttag">${Object.keys(TODO_TAGS).map(g => `<option ${x.tag === g ? 'selected' : ''}>${g}</option>`).join('')}</select>`)}
+      ${field('When', `<select name="when" id="f-twhen"><option value="today" ${when === 'today' ? 'selected' : ''}>Today</option><option value="later" ${when === 'later' ? 'selected' : ''}>Later, no date</option><option value="date" ${when === 'date' ? 'selected' : ''}>On a date</option></select>`)}</div>
+      ${field('Date (if “On a date”)', `<input type="date" name="date" id="f-tdate" value="${x.due && x.due !== k ? x.due : ''}">`)}
+      ${foot(m.id ? delBtn('delete-todo', m.id) : '', m.id ? 'Save' : 'Add to-do')}</form>`;
+  } else if (m.type === 'purchase') {
+    const t = today0();
+    const p = m.id ? byId(S.purchases, m.id) : { name: m.name || '', kind: m.kind || 'need', price:'', month: monthKey(t), link: m.link || '', note:'' };
+    const months = Array.from({ length:12 }, (_, i) => monthKey(t, i));
+    html = `<form data-form="purchase">${mhead(m.id ? 'Edit item' : 'New purchase', 'Something to buy in the next few months.')}
+      ${field('Item', `<input name="name" id="f-pname" required maxlength="80" value="${esc(p.name)}" placeholder="e.g. Coffee beans (500 g)">`)}
+      <fieldset class="field"><legend>Need or want?</legend><div class="opts">${[['need','Need'],['want','Want']].map(([k, l]) => `<label><input type="radio" name="kind" value="${k}" ${p.kind === k ? 'checked' : ''}><span class="o">${l}</span></label>`).join('')}</div></fieldset>
+      <div class="two">${field('Price (BDT)', `<input type="number" name="price" id="f-pprice" min="0" step="1" inputmode="numeric" value="${esc(p.price)}" placeholder="0">`)}
+      ${field('Buy in', `<select name="month" id="f-pmonth">${months.map(k => `<option value="${k}" ${p.month === k ? 'selected' : ''}>${monthLong(k)}</option>`).join('')}<option value="" ${!p.month ? 'selected' : ''}>Someday</option></select>`)}</div>
+      ${field('Link', `<input type="url" name="link" id="f-plink" value="${esc(p.link)}" placeholder="https://">`)}
+      ${field('Note', `<input name="note" id="f-pnote" maxlength="80" value="${esc(p.note)}" placeholder="e.g. Monthly, or for Watercolor">`)}
+      ${foot(m.id ? delBtn('delete-purchase', m.id) : '', m.id ? 'Save' : 'Add item')}</form>`;
+  } else if (m.type === 'idea') {
+    const d = m.id ? byId(S.ideas, m.id) : { text:'', tag:'Idea', status:'new' };
+    html = `<form data-form="idea">${mhead(m.id ? 'Edit idea' : 'New idea')}
+      ${field('Idea', `<textarea name="text" id="f-dtext" required maxlength="300" placeholder="Write it down before it’s gone">${esc(d.text)}</textarea>`)}
+      <div class="two">${field('Tag', `<select name="tag" id="f-dtag">${IDEA_TAGS.map(g => `<option ${d.tag === g ? 'selected' : ''}>${g}</option>`).join('')}</select>`)}
+      ${field('Status', `<select name="status" id="f-dstatus">${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}" ${d.status === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select>`)}</div>
+      ${foot(m.id ? delBtn('delete-idea', m.id) : '', m.id ? 'Save' : 'Add idea')}</form>`;
+  } else if (m.type === 'plan') {
+    const p = m.id ? byId(S.plans, m.id) : { title:'', place:'', tone:'sky', start:'', end:'', budget:'', status:'idea', pause:true };
+    html = `<form data-form="plan">${mhead(m.id ? 'Edit plan' : 'New plan', 'A trip or a bigger plan with dates and a checklist.')}
+      ${field('Name', `<input name="title" id="f-ltitle" required maxlength="60" value="${esc(p.title)}" placeholder="e.g. Sylhet tea gardens">`)}
+      ${field('Place', `<input name="place" id="f-lplace" maxlength="60" value="${esc(p.place)}" placeholder="e.g. Sylhet">`)}
+      <div class="two">${field('From', `<input type="date" name="start" id="f-lstart" value="${p.start || ''}">`)}${field('To', `<input type="date" name="end" id="f-lend" value="${p.end || ''}">`)}</div>
+      <div class="two">${field('Budget (BDT)', `<input type="number" name="budget" id="f-lbudget" min="0" step="100" value="${esc(p.budget)}">`)}
+      ${field('Status', `<select name="status" id="f-lstatus">${Object.entries(PLAN_STATUS).map(([k, v]) => `<option value="${k}" ${p.status === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select>`)}</div>
+      <label class="field" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" name="pause" id="f-lpause" ${p.pause ? 'checked' : ''}><span style="font-size:14px;color:var(--ink)">Pause my buckets during this plan</span></label>
+      ${toneOpts('tone', p.tone)}${foot(m.id ? delBtn('delete-plan', m.id) : '', m.id ? 'Save plan' : 'Add plan')}</form>`;
+  } else if (m.type === 'chooser') {
+    const c = (tone, ic, type, l) => `<button type="button" class="t-${tone}" data-act="quick" data-type="${type}">${icon(ic, 20)}${l}</button>`;
+    html = `<div class="mbody">${mhead('Add something')}<div class="chooser">${c('butter','checksq','todo','To-do')}${c('lavender','star','interest','Interest')}${c('mint','bag','purchase','Purchase')}${c('sky','idea','idea','Idea')}${c('rose','map','plan','Plan')}${c('slate','calendar','bucket','Bucket')}</div></div>`;
+  } else if (m.type === 'settings') {
+    const cloud = false;
+    const hourOpt = (sel, from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i).map(h => `<option value="${h}" ${Number(sel) === h ? 'selected' : ''}>${h === 24 ? 'Midnight' : fmtTime(h * 60)}</option>`).join('');
+    html = `<div class="mbody">${mhead('Guest settings', 'No account needed. You are using Mind Bucket as a guest.')}
+      <div class="note">${cloud ? `${icon('cloud', 16)} Your planner is saved privately to your Claude account, so it follows you to other devices. Nobody else who opens this page can see it.` : `${icon('device', 16)} Your planner is saved in this browser only. Clearing your browser data removes it, so download a backup now and then. A backup also moves your planner to another browser or device.`}</div>
+      <div class="two">${field('Week starts on', `<select data-change="set-week" id="f-sweek">${[[6,'Saturday'],[0,'Sunday'],[1,'Monday']].map(([v, l]) => `<option value="${v}" ${Number(S.settings.weekStart) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+      <div class="two">${field('Day starts', `<select data-change="set-start" id="f-sstart">${hourOpt(S.settings.dayStart, 4, 10)}</select>`)}${field('Day ends', `<select data-change="set-end" id="f-send">${hourOpt(S.settings.dayEnd, 18, 24)}</select>`)}</div></div>
+      <section class="field"><span>Backup</span><textarea id="f-export" readonly rows="3" aria-label="Backup data">${esc(JSON.stringify(S))}</textarea><div class="tpl"><button type="button" class="btn btn-secondary btn-sm" data-act="download-export">Download backup file</button><button type="button" class="btn btn-ghost btn-sm" data-act="copy-export">Copy as text</button></div></section>
+      <form data-form="import" style="padding:0;gap:8px"><label class="field"><span>Restore from a backup</span><textarea name="json" id="f-import" rows="3" placeholder="Paste a backup here"></textarea></label><p class="err" aria-live="polite"></p><div class="tpl"><label class="btn btn-ghost btn-sm" style="cursor:pointer">Open a backup file<input type="file" id="f-import-file" accept="application/json,.json" data-change="import-file" hidden></label><button type="submit" class="btn btn-secondary btn-sm">Restore</button></div></form>
+      <div class="mfoot"><div class="tpl"><button type="button" class="btn btn-ghost btn-sm" data-act="load-sample">Load the sample week</button><button type="button" class="btn btn-ghost btn-sm" data-act="clear-all">${icon('trash', 16)}<span>Clear everything</span></button></div><div class="r"><button type="button" class="btn btn-primary" data-act="close-modal">Done</button></div></div></div>`;
+  }
+  root.innerHTML = `<div class="overlay" data-act="overlay"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+}
+function openModal(m) {
+  UI.modal = m; renderModal();
+  setTimeout(() => { const f = document.querySelector('.modal input:not([type=hidden]):not([type=radio]):not([type=checkbox]), .modal textarea:not([readonly]), .modal select, .modal button'); if (f && !('ontouchstart' in window)) f.focus(); }, 0);
+}
+function closeModal() { UI.modal = null; renderModal(); if (UI.pendingRender) { UI.pendingRender = false; render(); } }
+
+/* ---------------- render ---------------- */
+function render() {
+  const keep = {};
+  for (const sel of ['#main', '#panel', '#shell']) { const el = $(sel); if (el) keep[sel] = el.scrollTop; }
+  const cs = document.querySelector('.cal-scroll'); const csLeft = cs ? cs.scrollLeft : 0;
+  const ae = document.activeElement; const focusId = ae && ae.id; const selStart = ae && 'selectionStart' in ae ? ae.selectionStart : null;
+  renderTop();
+  const V = { calendar:[viewCalendar, panelCalendar], interests:[viewInterests, panelInterests], todo:[viewTodo, panelTodo], purchases:[viewPurchases, panelPurchases], ideas:[viewIdeas, panelIdeas], plans:[viewPlans, panelPlans] }[UI.view];
+  $('#main').innerHTML = V[0]();
+  $('#panel').innerHTML = V[1]();
+  for (const sel in keep) { const el = $(sel); if (el) el.scrollTop = keep[sel]; }
+  const cs2 = document.querySelector('.cal-scroll'); if (cs2) cs2.scrollLeft = csLeft;
+  if (focusId && !document.querySelector('.overlay')) { const el = document.getElementById(focusId); if (el) { el.focus({ preventScroll:true }); if (selStart != null && 'setSelectionRange' in el) { try { el.setSelectionRange(selStart, selStart); } catch (e) {} } } }
+  if (UI.modal) renderModal();
+}
+let toastTimer;
+function toast(msg) { const el = $('#toast'); el.textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, 2800); }
+function go(view) { if (!VIEWS.some(v => v.id === view)) view = 'calendar'; UI.view = view; if (location.hash.slice(1) !== view) { try { history.replaceState(null, '', '#' + view); } catch (e) { location.hash = view; } } const m = $('#main'), p = $('#panel'), s = $('#shell'); render(); [m, p, s].forEach(x => { if (x) x.scrollTop = 0; }); }
+
+/* ---------------- actions ---------------- */
+function armed(el, label) { if (el.dataset.armed) return true; el.dataset.armed = '1'; const sp = el.querySelector('span') || el; sp.textContent = label || 'Tap again to confirm'; setTimeout(() => { if (el.isConnected) { delete el.dataset.armed; } }, 4000); return false; }
+function act(a, el, e) {
+  const id = el.dataset.id;
+  switch (a) {
+    case 'nav': go(el.dataset.view); break;
+    case 'settings': openModal({ type:'settings' }); break;
+    case 'overlay': if (e.target === el) closeModal(); break;
+    case 'close-modal': closeModal(); break;
+    case 'keep-sample': commit(() => { S.sample = false; }); break;
+    case 'start-fresh': S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); render(); toast('Clean slate. Start by adding your buckets.'); break;
+    case 'cal-mode': UI.calMode = el.dataset.v; if (UI.calMode === 'week') { UI.weekOffset = Math.floor(daysBetween(weekDates(0)[0], addDays(today0(), UI.dayOffset)) / 7); } render(); break;
+    case 'cal-step': if (UI.calMode === 'week') UI.weekOffset += Number(el.dataset.d); else UI.dayOffset += Number(el.dataset.d); render(); break;
+    case 'cal-today': UI.weekOffset = 0; UI.dayOffset = 0; render(); break;
+    case 'goto-day': UI.calMode = 'day'; UI.dayOffset = daysBetween(today0(), parseYmd(el.dataset.date)); render(); break;
+    case 'goto-plan': UI.planSel = id; go('plans'); break;
+    case 'new-bucket': openModal({ type:'bucket' }); break;
+    case 'new-bucket-at': { const s = Number(el.dataset.s), en = Number(el.dataset.e); const d = addDays(today0(), UI.dayOffset); openModal({ type:'bucket', start:minToTime(s), end:minToTime(Math.min(en, s + 120)), days:[d.getDay()] }); break; }
+    case 'add-template': { const tp = TEMPLATES[Number(el.dataset.i)]; commit(() => { S.buckets.push(Object.assign({ id:uid() }, JSON.parse(JSON.stringify(tp)))); }, `${tp.name} added`); break; }
+    case 'edit-bucket': openModal({ type:'bucket', id }); break;
+    case 'open-occ': if (DRAG) break; openModal({ type:'occ', bid: el.dataset.bid, date: el.dataset.date }); break;
+    case 'toggle-session': e.stopPropagation(); toggleSession(id); break;
+    case 'remove-session': commit(() => { S.sessions = S.sessions.filter(s => s.id !== id); }, 'Removed from bucket'); break;
+    case 'schedule': e.stopPropagation(); openModal({ type:'schedule', kind: el.dataset.kind, id, date: ymd(today0()) }); break;
+    case 'sch-day': UI.modal.date = el.dataset.date; renderModal(); break;
+    case 'quick': { const t = el.dataset.type; const map = { todo:{ type:'todo' }, interest:{ type:'interest' }, purchase:{ type:'purchase', kind: el.dataset.kind }, idea:{ type:'idea' }, plan:{ type:'plan' }, bucket:{ type:'bucket' }, any:{ type:'chooser' } }; openModal(map[t] || { type:'chooser' }); break; }
+    case 'focus': { const t = document.getElementById(el.dataset.target); if (t) { t.focus(); t.scrollIntoView({ block:'center', behavior:'smooth' }); } break; }
+    case 'i-filter': UI.iFilter = el.dataset.v; render(); break;
+    case 'edit-interest': openModal({ type:'interest', id }); break;
+    case 'resume-interest': commit(() => { const i = byId(S.interests, id); if (i) i.level = 'maintain'; }, 'Moved to Maintain'); break;
+    case 'delete-interest': if (!armed(el)) break; commit(() => { S.interests = S.interests.filter(x => x.id !== id); removeRef('interest', id); }, 'Interest deleted'); closeModal(); break;
+    case 't-filter': UI.tFilter = el.dataset.v; render(); break;
+    case 'cap-when': UI.todoWhen = el.dataset.v; el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === el))); break;
+    case 'toggle-todo': toggleTodo(id); break;
+    case 'edit-todo': openModal({ type:'todo', id }); break;
+    case 'delete-todo': if (!armed(el)) break; commit(() => { S.todos = S.todos.filter(x => x.id !== id); removeRef('todo', id); }, 'To-do deleted'); closeModal(); break;
+    case 'p-filter': UI.pFilter = el.dataset.v; render(); break;
+    case 'toggle-bought': commit(() => { const p = byId(S.purchases, id); if (p) p.bought = !p.bought; }); break;
+    case 'edit-purchase': openModal({ type:'purchase', id }); break;
+    case 'delete-purchase': if (!armed(el)) break; commit(() => { S.purchases = S.purchases.filter(x => x.id !== id); }, 'Item deleted'); closeModal(); break;
+    case 'select-idea': UI.ideaSel = UI.ideaSel === id ? null : id; render(); if (UI.ideaSel && window.matchMedia('(max-width: 1080px)').matches) { const p = $('#panel'); if (p) p.scrollIntoView({ behavior:'smooth' }); } break;
+    case 'close-idea': UI.ideaSel = null; render(); break;
+    case 'toggle-dropped': UI.showDropped = !UI.showDropped; render(); break;
+    case 'idea-status': commit(() => { const d = byId(S.ideas, id); if (d) d.status = el.dataset.v; }); break;
+    case 'idea-to-todo': { const d = byId(S.ideas, id); if (!d) break; commit(() => { S.todos.push({ id:uid(), title:d.text, tag:'General', due:null, done:false, doneAt:null, createdAt:Date.now() }); if (d.status === 'new') d.status = 'planned'; }, 'Added to To-do · Later'); break; }
+    case 'edit-idea': openModal({ type:'idea', id }); break;
+    case 'delete-idea': if (!armed(el)) break; commit(() => { S.ideas = S.ideas.filter(x => x.id !== id); removeRef('idea', id); UI.ideaSel = null; }, 'Idea deleted'); closeModal(); break;
+    case 'select-plan': UI.planSel = id; render(); break;
+    case 'edit-plan': openModal({ type:'plan', id }); break;
+    case 'delete-plan': if (!armed(el)) break; commit(() => { S.plans = S.plans.filter(x => x.id !== id); UI.planSel = null; }, 'Plan deleted'); closeModal(); break;
+    case 'toggle-pause': commit(() => { const p = byId(S.plans, id); if (p) p.pause = !p.pause; }, null); break;
+    case 'toggle-check': commit(() => { const p = byId(S.plans, id); const c = p && p.checklist.find(x => x.id === el.dataset.c); if (c) c.done = !c.done; }); break;
+    case 'del-check': commit(() => { const p = byId(S.plans, id); if (p) p.checklist = p.checklist.filter(x => x.id !== el.dataset.c); }); break;
+    case 'delete-bucket': if (!armed(el)) break; commit(() => { S.buckets = S.buckets.filter(x => x.id !== id); S.sessions = S.sessions.filter(s => s.bucketId !== id); }, 'Bucket deleted'); closeModal(); break;
+    case 'copy-export': { const ta = $('#f-export'); const txt = ta ? ta.value : JSON.stringify(S); const done = () => toast('Backup copied'); const fallback = () => { if (ta) { ta.focus(); ta.select(); } toast('Select all and copy the text'); };
+      try { const pr = navigator.clipboard && navigator.clipboard.writeText(txt); if (pr && pr.then) pr.then(done, fallback); else fallback(); } catch (err) { fallback(); } break; }
+    case 'download-export': {
+      try {
+        const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
+        const url = URL.createObjectURL(blob); const a2 = document.createElement('a');
+        a2.href = url; a2.download = `mind-bucket-backup-${ymd(today0())}.json`; document.body.appendChild(a2); a2.click(); a2.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Backup downloaded');
+      } catch (err) { toast('Download failed. Use Copy as text instead.'); }
+      break; }
+    case 'load-sample': if (!armed(el, 'Tap again to replace your data')) break; S = sample(); S.updatedAt = Date.now(); UI.ideaSel = null; UI.planSel = null; persistLocal(); closeModal(); render(); toast('Sample week loaded'); break;
+    case 'clear-all': if (!armed(el, 'Tap again to clear everything')) break; S = emptyState(S.settings); UI.ideaSel = null; UI.planSel = null; save(); closeModal(); render(); toast('Everything cleared'); break;
+  }
+}
+function formErr(f, msg) { const p = f.querySelector('.err'); if (p) p.textContent = msg; }
+function submit(type, f, e) {
+  const fd = new FormData(f); const g = k => String(fd.get(k) || '').trim();
+  switch (type) {
+    case 'bucket': {
+      const name = g('name'), start = g('start'), end = g('end'); const days = fd.getAll('days').map(Number);
+      if (!name) return formErr(f, 'Give the bucket a name.');
+      if (!start || !end || toMin(end) <= toMin(start)) return formErr(f, 'The end time needs to be after the start time.');
+      if (!days.length) return formErr(f, 'Pick at least one day.');
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.buckets, id), { name, start, end, days, tone: g('tone') || 'lavender' }); else S.buckets.push({ id:uid(), name, start, end, days, tone: g('tone') || 'lavender' }); }, id ? 'Bucket saved' : `${name} added`);
+      closeModal(); break;
+    }
+    case 'occ-add': {
+      const [kind, rid] = g('item').split(':'); if (!kind || !rid) return;
+      const { bid, date } = UI.modal; schedule(kind, rid, bid, date); renderModal(); break;
+    }
+    case 'schedule': {
+      const bid = g('bid'); if (!bid) return formErr(f, 'Pick a bucket first.');
+      const m = UI.modal; closeModal(); schedule(m.kind, m.id, bid, m.date); break;
+    }
+    case 'interest': {
+      const name = g('name'); if (!name) return formErr(f, 'Give it a name.');
+      const per = Math.min(7, Math.max(1, Number(g('perWeek')) || 1)); const minutes = Math.min(300, Math.max(5, Number(g('minutes')) || 30));
+      const data = { name, note: g('note'), level: g('level') || 'maintain', perWeek: per, minutes, icon: g('icon') || 'star', tone: g('tone') || 'lavender' };
+      if (data.level === 'focus' && !UI.modal.id && S.interests.filter(i => i.level === 'focus').length >= 2) { data.level = 'maintain'; toast('Two interests are already in Focus, so this one starts in Maintain'); }
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.interests, id), data); else S.interests.push(Object.assign({ id:uid() }, data)); }, id ? 'Interest saved' : `${name} added`);
+      closeModal(); break;
+    }
+    case 'todo': {
+      const title = g('title'); if (!title) return formErr(f, 'Write what needs doing.');
+      const when = g('when'); const k = ymd(today0()); let due = null;
+      if (when === 'today') due = k; else if (when === 'date') { due = g('date'); if (!due) return formErr(f, 'Pick a date, or choose Today or Later.'); }
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.todos, id), { title, tag: g('tag') || 'General', due }); else S.todos.push({ id:uid(), title, tag: g('tag') || 'General', due, done:false, doneAt:null, createdAt:Date.now() }); }, id ? 'To-do saved' : 'To-do added');
+      closeModal(); break;
+    }
+    case 'todo-capture': {
+      const title = g('title'); if (!title) return;
+      commit(() => { S.todos.push({ id:uid(), title, tag: g('tag') || 'General', due: UI.todoWhen === 'today' ? ymd(today0()) : null, done:false, doneAt:null, createdAt:Date.now() }); }, UI.todoWhen === 'today' ? 'Added to Today' : 'Added to Later');
+      const inp = document.getElementById('cap-todo'); if (inp) { inp.value = ''; inp.focus(); } break;
+    }
+    case 'purchase': {
+      const name = g('name'); if (!name) return formErr(f, 'Name the item.');
+      const link = g('link'); if (link && !safeLink(link)) return formErr(f, 'That link does not look right. Paste the full address.');
+      const data = { name, kind: g('kind') || 'need', price: Math.max(0, Number(g('price')) || 0), month: g('month'), link: link ? safeLink(link) : '', note: g('note') };
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.purchases, id), data); else S.purchases.push(Object.assign({ id:uid(), bought:false }, data)); }, id ? 'Item saved' : `${name} added to ${data.kind === 'need' ? 'Need' : 'Want'}`);
+      closeModal(); break;
+    }
+    case 'link-capture': {
+      const raw = g('link'); const link = safeLink(raw); if (!link) { toast('Paste a full product link first'); return; }
+      const kind = (e.submitter && e.submitter.value) || 'need';
+      let name = '';
+      try { const u = new URL(link); const seg = u.pathname.split('/').filter(Boolean).filter(s => !/^\d+$/.test(s) && s.length > 2).pop() || ''; name = decodeURIComponent(seg).replace(/\.[a-z]{2,5}$/i, '').replace(/[-_+]+/g, ' ').replace(/\s+/g, ' ').trim(); if (name) name = name.charAt(0).toUpperCase() + name.slice(1); if (!name || name.length > 60) name = u.hostname.replace(/^www\./, ''); } catch (err) {}
+      f.reset(); openModal({ type:'purchase', link, kind, name }); break;
+    }
+    case 'idea': {
+      const text = g('text'); if (!text) return formErr(f, 'Write the idea down first.');
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.ideas, id), { text, tag: g('tag') || 'Idea', status: g('status') || 'new' }); else S.ideas.push({ id:uid(), text, tag: g('tag') || 'Idea', status: g('status') || 'new', createdAt:Date.now() }); }, id ? 'Idea saved' : 'Idea saved to New');
+      closeModal(); break;
+    }
+    case 'idea-capture': {
+      const text = g('text'); if (!text) return;
+      commit(() => { S.ideas.push({ id:uid(), text, tag: g('tag') || 'Idea', status:'new', createdAt:Date.now() }); }, 'Idea saved to New');
+      const inp = document.getElementById('cap-idea'); if (inp) { inp.value = ''; inp.focus(); } break;
+    }
+    case 'plan': {
+      const title = g('title'); if (!title) return formErr(f, 'Give the plan a name.');
+      let start = g('start'), end = g('end');
+      if (start && !end) end = start; if (end && !start) start = end;
+      if (start && end && end < start) return formErr(f, 'The end date needs to be on or after the start date.');
+      const data = { title, place: g('place'), start, end, budget: Math.max(0, Number(g('budget')) || 0), status: g('status') || 'idea', pause: fd.get('pause') === 'on', tone: g('tone') || 'sky' };
+      const id = UI.modal.id;
+      commit(() => { if (id) Object.assign(byId(S.plans, id), data); else { const p = Object.assign({ id:uid(), days:[], checklist:[] }, data); S.plans.push(p); UI.planSel = p.id; } }, id ? 'Plan saved' : `${title} added`);
+      closeModal(); if (!id && UI.view !== 'plans') go('plans'); break;
+    }
+    case 'check-add': {
+      const text = g('text'); if (!text) return; const pid = f.dataset.id;
+      commit(() => { const p = byId(S.plans, pid); if (p) p.checklist.push({ id:uid(), text, done:false }); });
+      const inp = document.getElementById('check-add-' + pid); if (inp) inp.focus(); break;
+    }
+    case 'import': {
+      let obj; try { obj = JSON.parse(g('json')); } catch (err) { return formErr(f, 'That backup could not be read. Paste the whole text you copied.'); }
+      if (!obj || !Array.isArray(obj.buckets)) return formErr(f, 'That does not look like a Mind Bucket backup.');
+      S = migrate(obj); S.sample = false; UI.ideaSel = null; UI.planSel = null; save(); closeModal(); render(); toast('Backup restored'); break;
+    }
+  }
+}
+function change(type, el) {
+  switch (type) {
+    case 'plan-day': { const p = byId(S.plans, el.dataset.id); if (!p) return; const i = Number(el.dataset.i); while (p.days.length <= i) p.days.push(''); p.days[i] = el.value.trim(); save(); break; }
+    case 'import-file': {
+      const file = el.files && el.files[0]; if (!file) return;
+      const rd = new FileReader();
+      rd.onload = () => { const ta = document.getElementById('f-import'); if (ta) { ta.value = String(rd.result || ''); } toast('Backup loaded. Tap Restore to use it.'); };
+      rd.onerror = () => toast('That file could not be read.');
+      rd.readAsText(file); break; }
+    case 'set-week': S.settings.weekStart = Number(el.value); UI.weekOffset = 0; save(); render(); break;
+    case 'set-start': S.settings.dayStart = Number(el.value); save(); render(); break;
+    case 'set-end': S.settings.dayEnd = Number(el.value); save(); render(); break;
+  }
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  if (el.tagName === 'A') return;
+  act(el.dataset.act, el, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && UI.modal) { closeModal(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); act(e.target.dataset.act, e.target, e); }
+});
+document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); submit(f.dataset.form, f, e); });
+document.addEventListener('change', e => { const el = e.target.closest('[data-change]'); if (el) change(el.dataset.change, el); });
+document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.input === 'idea-search') { UI.ideaQuery = e.target.value; render(); } });
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest && e.target.closest('[data-drag]'); if (!el) return;
+  DRAG = { kind: el.dataset.drag, id: el.dataset.id };
+  try { e.dataTransfer.setData('text/plain', DRAG.kind + ':' + DRAG.id); e.dataTransfer.effectAllowed = 'copy'; } catch (err) {}
+  el.classList.add('dragging');
+});
+document.addEventListener('dragend', () => { document.querySelectorAll('.dragging,.drop-hover').forEach(n => n.classList.remove('dragging', 'drop-hover')); setTimeout(() => { DRAG = null; }, 0); });
+document.addEventListener('dragover', e => {
+  const t = e.target.closest && e.target.closest('[data-drop]'); if (!t || !DRAG) return;
+  e.preventDefault(); try { e.dataTransfer.dropEffect = 'copy'; } catch (err) {}
+  if (!t.classList.contains('drop-hover')) { document.querySelectorAll('.drop-hover').forEach(n => n.classList.remove('drop-hover')); t.classList.add('drop-hover'); }
+});
+document.addEventListener('dragleave', e => { const t = e.target.closest && e.target.closest('[data-drop]'); if (t && !t.contains(e.relatedTarget)) t.classList.remove('drop-hover'); });
+document.addEventListener('drop', e => {
+  const t = e.target.closest && e.target.closest('[data-drop]'); if (!t || !DRAG) return;
+  e.preventDefault();
+  const [bid, k] = t.dataset.drop.split('|'); const d = DRAG; DRAG = null;
+  schedule(d.kind, d.id, bid, k);
+});
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && v !== UI.view && VIEWS.some(x => x.id === v)) go(v); });
+setInterval(() => {
+  const grid = document.querySelector('.cal-grid'); const now = document.querySelector('.now'); if (!grid || !now) return;
+  const h0 = Number(grid.dataset.h0); const n = new Date(); const m = n.getHours() * 60 + n.getMinutes();
+  now.style.top = ((m - h0 * 60) / 60 * HR) + 'px';
+}, 60000);
+
+/* ---------------- boot ---------------- */
+S = loadLocal() || sample();
+const hv = location.hash.slice(1); if (VIEWS.some(v => v.id === hv)) UI.view = hv;
+renderDock();
+render();
+})();
+</script>
+</body>
+</html>
