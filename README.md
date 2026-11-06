@@ -11,6 +11,7 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 | `index.html` | Home page at `/`: an animated sky-and-meadow hero with a "What do you want to make time for?" bar, how it works, a tour of the sections and questions. |
 | `app.html` | The planner itself at `/app`: markup, styles and script in one file. No build step. |
 | `og.jpg` | Preview image shown when the link is shared |
+| `vendor/gsap.min.js`, `vendor/ScrollTrigger.min.js` | GSAP 3.13 (free standard license) for the home page's scroll animations, hosted with the site. If they fail to load, the page still works without them. |
 | `favicon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Browser and home-screen icons |
 | `manifest.webmanifest` | Lets people add Mind Bucket to their phone's home screen as an app |
 | `vercel.json` | Clean URLs and basic security headers for Vercel |

@@ -88,7 +88,7 @@
 .t-slate{--t-bg:var(--slate-bg);--t-ac:var(--slate-ac);--t-fg:var(--slate-fg)}
 
 *,*::before,*::after{box-sizing:border-box}
-html{background:var(--canvas);scroll-behavior:smooth;scroll-padding-top:96px}
+html{background:var(--canvas)}
 body{margin:0;background:var(--canvas);color:var(--ink);font:400 17px/1.55 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1,h2,h3,h4,p{margin:0}
 a{color:inherit}
@@ -254,8 +254,8 @@ html.is-night .glass{background:rgba(160,180,230,.14);border-color:rgba(200,214,
 .bar{display:flex;align-items:center;justify-content:space-between;height:38px;padding:0 14px;border-radius:12px;background:var(--t-ac);color:var(--t-fg);font:600 14px/1 var(--font);margin-bottom:9px;transform-origin:0 50%}
 .bar small{font:500 13px/1 var(--font);opacity:.85}
 .bar.tall{height:60px;align-items:flex-start;padding-top:12px}
-html.js .steps:not(.played) .bar{opacity:0;transform:scaleX(.08)}
-html.js .steps:not(.played) .icard{transform:translate(150px,30px) rotate(6deg)}
+html.js:not(.gsap) .steps:not(.played) .bar{opacity:0;transform:scaleX(.08)}
+html.js:not(.gsap) .steps:not(.played) .icard{transform:translate(150px,30px) rotate(6deg)}
 .played .bar{animation:grow .7s calc(var(--i) * 140ms) cubic-bezier(.2,.8,.2,1) both}
 @keyframes grow{from{transform:scaleX(.08);opacity:0}to{transform:none;opacity:1}}
 .drop{border-radius:14px;background:var(--lavender-ac);color:var(--lavender-fg);padding:12px 14px;height:118px;font:600 14px/1 var(--font)}
@@ -273,7 +273,14 @@ html.is-night .slot{border-color:rgba(220,196,247,.35)}
 
 /* tour */
 .tour{display:grid;grid-template-columns:minmax(260px,350px) 1fr;gap:36px;margin-top:52px;align-items:start}
+.tabs-wrap{position:relative;min-width:0}
 .tabs{display:flex;flex-direction:column;gap:4px}
+.rail{display:none;position:absolute;left:-16px;top:14px;bottom:14px;width:2px;border-radius:2px;background:var(--line)}
+.rail i{display:block;height:100%;border-radius:2px;background:var(--ink);transform-origin:50% 0;transform:scaleY(0)}
+html.tour-pin .rail{display:block}
+html.tour-pin .stage{position:relative;top:0}
+h2[tabindex="-1"]:focus{outline:none}
+html.gsap .hero-copy,html.gsap #screen-wrap,html.gsap .field{will-change:transform}
 .tab{display:grid;grid-template-columns:38px 1fr;column-gap:14px;align-items:center;padding:12px 14px;border:0;border-radius:18px;background:none;text-align:left;color:var(--ink)}
 .tab .sw{grid-row:span 2;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--t-ac);color:var(--t-fg)}
 .tab b{font:600 18px/1.25 var(--font)}
@@ -343,6 +350,7 @@ html.is-night .slot{border-color:rgba(220,196,247,.35)}
 .closing{position:relative;overflow:hidden;isolation:isolate;margin-top:120px;border-radius:34px;min-height:440px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;color:#fff;padding:84px 24px 0}
 .closing .sky-day,.closing .sky-night{z-index:-2}
 .closing canvas{position:absolute;left:0;bottom:0;width:100%;height:58%;z-index:-1}
+.closing-copy{display:flex;flex-direction:column;align-items:center}
 .closing h2{font:400 clamp(44px,6vw,76px)/1 var(--serif);letter-spacing:-.015em;text-shadow:0 6px 26px rgba(12,40,84,.35)}
 .closing p{margin:14px 0 26px;font:500 18px/1.5 var(--font);text-shadow:0 2px 14px rgba(12,40,84,.4)}
 footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px;padding:40px 0 48px;color:var(--ink-2);font-size:15px}
@@ -395,7 +403,6 @@ footer nav a:hover{text-decoration:underline}
   .nav .brand span{display:none}
 }
 @media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
   .cloud{animation-duration:var(--du)!important;animation-delay:var(--dl)!important;animation-play-state:paused!important}
 }
@@ -539,6 +546,7 @@ footer nav a:hover{text-decoration:underline}
         <h2 class="title" id="sections-title">Seven sections, one calm week</h2>
         <p class="intro">Everything you juggle has its own place, and any of it can go into a bucket.</p>
         <div class="tour">
+          <div class="tabs-wrap"><span class="rail" aria-hidden="true"><i></i></span>
           <div class="tabs" role="tablist" aria-label="Sections of the planner" id="tabs">
             <button class="tab t-slate" role="tab" id="tab-calendar" aria-controls="pane-calendar" aria-selected="true"><span class="sw"><svg class="ic"><use href="#i-calendar"/></svg></span><b>Calendar</b><small>Your week in time buckets</small></button>
             <button class="tab t-lavender" role="tab" id="tab-interests" aria-controls="pane-interests" aria-selected="false" tabindex="-1"><span class="sw"><svg class="ic"><use href="#i-star"/></svg></span><b>Interests</b><small>Make time for what you love</small></button>
@@ -547,7 +555,7 @@ footer nav a:hover{text-decoration:underline}
             <button class="tab t-sky" role="tab" id="tab-ideas" aria-controls="pane-ideas" aria-selected="false" tabindex="-1"><span class="sw"><svg class="ic"><use href="#i-idea"/></svg></span><b>Ideas</b><small>Catch ideas, plan the good ones</small></button>
             <button class="tab t-rose" role="tab" id="tab-plans" aria-controls="pane-plans" aria-selected="false" tabindex="-1"><span class="sw"><svg class="ic"><use href="#i-map"/></svg></span><b>Tours &amp; plans</b><small>Trips with dates and checklists</small></button>
             <button class="tab t-lavender" role="tab" id="tab-bucketlist" aria-controls="pane-bucketlist" aria-selected="false" tabindex="-1"><span class="sw"><svg class="ic"><use href="#i-flag"/></svg></span><b>Bucket list</b><small>Things to do once in your life</small></button>
-          </div>
+          </div></div>
 
           <div class="stage">
             <div class="s-top" aria-hidden="true">
@@ -664,9 +672,11 @@ footer nav a:hover{text-decoration:underline}
       <section class="closing" aria-labelledby="closing-title">
         <div class="sky-day" aria-hidden="true"></div><div class="sky-night" aria-hidden="true"></div>
         <canvas id="field-still" aria-hidden="true"></canvas>
-        <h2 id="closing-title">Your week is waiting</h2>
-        <p>Start as a guest. It takes a minute to draw your first bucket.</p>
-        <a class="cta light" href="/app">Open the planner</a>
+        <div class="closing-copy">
+          <h2 id="closing-title">Your week is waiting</h2>
+          <p>Start as a guest. It takes a minute to draw your first bucket.</p>
+          <a class="cta light" href="/app">Open the planner</a>
+        </div>
       </section>
 
       <footer>
@@ -678,7 +688,9 @@ footer nav a:hover{text-decoration:underline}
   </div>
 </main>
 
-<script>
+<script defer src="/vendor/gsap.min.js"></script>
+<script defer src="/vendor/ScrollTrigger.min.js"></script>
+<script type="module">
 (() => {
 'use strict';
 const $ = (s, r = document) => r.querySelector(s);
@@ -690,7 +702,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const icon = n => `<svg class="ic"><use href="#i-${n}"/></svg>`;
-root.classList.add('js');
+const G = !!(window.gsap && window.ScrollTrigger);
+root.classList.add('js'); if (G) root.classList.add('gsap');
 
 /* ---------------- theme ---------------- */
 const isNight = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : darkMQ.matches; };
@@ -799,18 +812,26 @@ function selectTab(t, focus) {
   if (focus) t.focus();
   if (matchMedia('(max-width: 980px)').matches) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMQ.matches ? 'auto' : 'smooth' });
 }
-tabs.forEach(t => t.addEventListener('click', () => selectTab(t)));
+let tourJump = null; // set while the tour is pinned to the scroll
+tabs.forEach((t, i) => t.addEventListener('click', () => { selectTab(t); if (tourJump) tourJump(i); }));
 $('#tabs').addEventListener('keydown', e => {
   const i = tabs.indexOf(document.activeElement); if (i < 0) return;
   const k = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
-  if (k) { e.preventDefault(); selectTab(tabs[(i + k + tabs.length) % tabs.length], true); }
-  else if (e.key === 'Home') { e.preventDefault(); selectTab(tabs[0], true); }
-  else if (e.key === 'End') { e.preventDefault(); selectTab(tabs[tabs.length - 1], true); }
+  let j = -1;
+  if (k) j = (i + k + tabs.length) % tabs.length; else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = tabs.length - 1;
+  if (j < 0) return; e.preventDefault(); selectTab(tabs[j], true); if (tourJump) tourJump(j);
 });
 
-/* steps 1 and 2 act themselves out once, when they come into view */
-new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('played'); o.unobserve(e.target); } }), { threshold: .45 })
+/* without GSAP, steps 1 and 2 act themselves out once, when they come into view */
+if (!G) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('played'); o.unobserve(e.target); } }), { threshold: .45 })
   .observe($('#steps'));
+
+/* in-page links scroll smoothly and move focus to the section */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#"]'); if (!a) return; const el = document.getElementById(a.getAttribute('href').slice(1)); if (!el) return;
+  e.preventDefault(); window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 88, behavior: reduceMQ.matches ? 'auto' : 'smooth' });
+  const h = el.querySelector('h2') || el; if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true });
+});
 
 /* ---------------- the meadow ---------------- */
 const PAL = {
@@ -1030,8 +1051,8 @@ const scene = (() => {
   function layout() {
     W = hero.clientWidth; H = hero.clientHeight;
     const s = Math.min(1, screenWrap.clientWidth / 640); $('#screen').style.setProperty('--s', s.toFixed(3));
-    const hr = hero.getBoundingClientRect(), sr = screenWrap.getBoundingClientRect(), cb = copy.getBoundingClientRect().bottom - hr.top;
-    const yC = sr.top - hr.top + 40, yE = Math.min(yC, Math.max(cb + 18, yC - H * .14));
+    const cb = copy.offsetTop + copy.offsetHeight; // offsets ignore the scroll animation's transforms
+    const yC = screenWrap.offsetTop + 40, yE = Math.min(yC, Math.max(cb + 18, yC - H * .14));
     const wave = x => Math.sin(x * .011) * 5 + Math.sin(x * .027 + 1.7) * 3;
     const yTop = x => { const u = (x - W / 2) / (W / 2); return yE + (yC - yE) * (1 - Math.min(1, u * u)) + wave(x); };
     const FR = clamp(H * .2, 110, 210);
@@ -1071,7 +1092,7 @@ const scene = (() => {
   window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (hero.clientWidth === lastW && Math.abs(hero.clientHeight - lastH) < 120) return; lastW = hero.clientWidth; lastH = hero.clientHeight; refresh(); }, 150); });
   // parallax: the sky drifts a little slower than the page
   let ticking = false;
-  window.addEventListener('scroll', () => { if (ticking || reduceMQ.matches) return; ticking = true; requestAnimationFrame(() => { ticking = false; const y = Math.min(window.scrollY, H); const t = `translate3d(0,${(y * .3).toFixed(1)}px,0)`; $('.sky').style.transform = t; cloudsEl.style.transform = t; }); }, { passive: true });
+  if (!G) window.addEventListener('scroll', () => { if (ticking || reduceMQ.matches) return; ticking = true; requestAnimationFrame(() => { ticking = false; const y = Math.min(window.scrollY, H); const t = `translate3d(0,${(y * .3).toFixed(1)}px,0)`; $('.sky').style.transform = t; cloudsEl.style.transform = t; }); }, { passive: true });
 
   return {
     init() { lastW = hero.clientWidth; lastH = hero.clientHeight; refresh(); },
@@ -1082,7 +1103,78 @@ const scene = (() => {
     }
   };
 })();
-(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => scene.init());
+/* ---------------- scroll-driven motion (GSAP ScrollTrigger) ---------------- */
+if (G) {
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+  const mm = gsap.matchMedia();
+  mm.add({ wide: '(min-width: 981px) and (min-height: 640px)', motion: '(prefers-reduced-motion: no-preference)' }, ctx => {
+    const { wide, motion } = ctx.conditions;
+    if (!motion) { gsap.set('#steps .icard', { x: 0, y: -84 }); return; } // reduced motion: everything shows its finished state
+    const H = () => hero.clientHeight;
+
+    // 1. The hero holds for a moment while the camera tilts up: the headline lifts away,
+    //    sky and meadow sink at their own depths, and the planner rises out of the flowers.
+    gsap.timeline({
+      defaults: { ease: 'none', duration: 1 },
+      scrollTrigger: wide
+        ? { trigger: hero, start: 'top top', end: () => '+=' + Math.round(H() * .7), pin: true, scrub: .6, anticipatePin: 1, invalidateOnRefresh: true }
+        : { trigger: hero, start: 'top top', end: 'bottom top', scrub: .4, invalidateOnRefresh: true }
+    })
+      .to('.hero-copy', { y: () => -H() * (wide ? .14 : .08), autoAlpha: 0, duration: .55 }, 0)
+      .to('#screen-wrap', { y: () => -H() * (wide ? .34 : .05), scale: wide ? 1.1 : 1.02, transformOrigin: '50% 0%' }, 0)
+      .to('.sky', { y: () => H() * .05 }, 0)
+      .to('#clouds', { y: () => H() * .11 }, 0)
+      .to('#field-back', { y: () => H() * .1 }, 0)
+      .to('#field-front', { y: () => H() * .24 }, 0);
+
+    // 2. "How a week fills up" builds itself as you scroll: buckets grow, the interest card
+    //    glides into its slot, then the week fills in. Staggered starts make a left-to-right cascade on wide screens.
+    const arts = gsap.utils.toArray('#steps .art');
+    const st = (el, i) => ({ trigger: el, start: wide ? `top ${88 - i * 9}%` : 'top 88%', end: wide ? `top ${48 - i * 9}%` : 'top 45%', scrub: .7 });
+    gsap.timeline({ scrollTrigger: st(arts[0], 0) })
+      .from(arts[0].querySelectorAll('.bar'), { scaleX: .06, autoAlpha: 0, transformOrigin: '0% 50%', stagger: .18, duration: .5, ease: 'power2.out' });
+    gsap.timeline({ scrollTrigger: st(arts[1], 1) })
+      .fromTo(arts[1].querySelector('.icard'), { x: 150, y: 30, rotation: 6 }, { x: -4, y: -80, rotation: -2, duration: .75, ease: 'power2.inOut' })
+      .to(arts[1].querySelector('.icard'), { x: 0, y: -84, rotation: 0, duration: .25, ease: 'power1.out' })
+      .to(arts[1].querySelector('.slot'), { borderColor: 'transparent', duration: .2 }, '<');
+    gsap.timeline({ scrollTrigger: st(arts[2], 2) })
+      .from(arts[2].querySelectorAll('.wk-b'), { scaleY: .1, autoAlpha: 0, transformOrigin: '50% 0%', stagger: { each: .03, grid: 'auto' }, duration: .35, ease: 'power2.out' });
+
+    // 3. On wide screens the section tour pins, and scrolling walks through all seven sections.
+    if (wide) {
+      const N = tabs.length; let idx = -1, jumping = false, jt = 0;
+      root.classList.add('tour-pin');
+      const rail = $('.rail i');
+      const tour = ScrollTrigger.create({
+        trigger: '.tour', start: 'top 108px', end: () => '+=' + Math.round(innerHeight * .38 * (N - 1)),
+        pin: true, anticipatePin: 1, invalidateOnRefresh: true,
+        onUpdate: self => {
+          gsap.set(rail, { scaleY: self.progress });
+          if (jumping) return;
+          const i = Math.min(N - 1, Math.floor(self.progress * N));
+          if (i !== idx) { idx = i; selectTab(tabs[i]); }
+        }
+      });
+      // Clicking a tab while the tour is pinned scrolls to that section's stretch, so scroll and tabs stay in step.
+      tourJump = i => {
+        if (scrollY < tour.start - 2 || scrollY > tour.end + 2) return;
+        jumping = true; idx = i; clearTimeout(jt);
+        window.scrollTo({ top: Math.round(tour.start + (i + .5) / N * (tour.end - tour.start)), behavior: 'smooth' });
+        jt = setTimeout(() => { jumping = false; }, 900);
+      };
+      return () => { root.classList.remove('tour-pin'); tourJump = null; };
+    }
+  });
+
+  // 4. The closing meadow rises a little slower than the page.
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    gsap.fromTo('#field-still', { y: 70 }, { y: 0, ease: 'none', scrollTrigger: { trigger: '.closing', start: 'top bottom', end: 'bottom bottom', scrub: true } });
+    gsap.fromTo('.closing-copy', { y: 48 }, { y: 0, ease: 'none', scrollTrigger: { trigger: '.closing', start: 'top bottom', end: 'top 35%', scrub: .5 } });
+  });
+}
+
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { scene.init(); if (G) ScrollTrigger.refresh(); });
 })();
 </script>
 </body>
