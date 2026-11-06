@@ -746,7 +746,8 @@ let S = null;
 /* Guest data lives under LS_KEY. A signed-in user's planner is cached per account under LS_KEY.u.<uid>
    and saved to Firestore at users/<uid> (one document, the planner as a JSON string). */
 const AUTH = { configured:false, available:false, loading:false, loadError:false, user:null, fb:null, ref:null, unsub:null,
-  status:'guest', sIsUser:false, gotFirst:false, writing:false, again:false, timer:null };
+  status:'guest', sIsUser:false, gotFirst:false, writing:false, again:false, timer:null,
+  dirty:false, failed:false, listenError:false, retry:0, retryTimer:null };
 const LAST_UID_KEY = 'mindbucket.lastUid';
 const FB_VERSION = '10.12.2';
 const userKey = uid => LS_KEY + '.u.' + uid;
@@ -761,6 +762,32 @@ const storageLabel = () => {
   if (!AUTH.user) return 'Saved in this browser';
   return ({ loading:'Opening your planner…', saving:'Saving…', offline:'Offline · will sync', error:'Not synced yet', choose:'Choose what to keep' })[AUTH.status] || 'Synced to your account';
 };
+const syncNote = () => ({
+  synced:'Your planner is saved to your Google account and syncs across your devices. Only you can see it.',
+  saving:'Saving your latest changes to your account…',
+  loading:'Opening your planner from your account…',
+  offline:'You are offline. Your latest changes are kept on this device and saved to your account as soon as you are back online.',
+  error:'Could not reach your account just now. Your latest changes are kept on this device, and Mind Bucket keeps trying.'
+})[AUTH.status] || '';
+/* Work out the sync label from what is actually going on: it says Offline or Not synced only
+   while there are changes waiting to be saved, so a dropped connection with nothing to save stays Synced. */
+function refreshStatus() {
+  if (!AUTH.user || AUTH.status === 'choose' || (AUTH.status === 'loading' && !AUTH.gotFirst && !AUTH.dirty && !AUTH.listenError)) { renderTop(); return; }
+  const off = navigator.onLine === false;
+  AUTH.status = AUTH.listenError ? (off ? 'offline' : 'error')
+    : !AUTH.dirty && !AUTH.writing ? 'synced'
+    : off ? 'offline' : AUTH.failed ? 'error' : 'saving';
+  renderTop();
+  const n = document.getElementById('sync-note');
+  if (n) { n.innerHTML = `${icon('cloud', 16)} ${syncNote()}`; const b = document.getElementById('sync-now'); if (b) b.hidden = !(AUTH.status === 'error' || AUTH.status === 'offline'); }
+}
+/* Called when the person comes back to the page or the connection returns: retry anything waiting. */
+function recheckSync() {
+  if (!AUTH.user || !AUTH.fb) return;
+  if (AUTH.listenError && AUTH.fb.auth.currentUser && navigator.onLine !== false) { AUTH.listenError = false; onUser(AUTH.fb.auth.currentUser); return; }
+  if (AUTH.dirty && !AUTH.writing && navigator.onLine !== false) { AUTH.retry = 0; clearTimeout(AUTH.retryTimer); cloudQueue(); return; }
+  refreshStatus();
+}
 const initials = s => String(s || '?').split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
 
 async function initAuth() {
@@ -784,7 +811,8 @@ async function initAuth() {
 }
 function onUser(u) {
   if (AUTH.unsub) { AUTH.unsub(); AUTH.unsub = null; }
-  clearTimeout(AUTH.timer); AUTH.ref = null; AUTH.gotFirst = false;
+  clearTimeout(AUTH.timer); clearTimeout(AUTH.retryTimer); AUTH.ref = null; AUTH.gotFirst = false;
+  AUTH.dirty = false; AUTH.failed = false; AUTH.listenError = false; AUTH.retry = 0;
   if (!u) {
     const wasShowingUser = !!AUTH.user || !!BOOT_UID;
     AUTH.user = null; AUTH.sIsUser = false; AUTH.status = 'guest'; BOOT_UID = null; lsDel(LAST_UID_KEY);
@@ -802,42 +830,53 @@ function onUser(u) {
   const { fsM, db } = AUTH.fb; const ref = fsM.doc(db, 'users', u.uid); AUTH.ref = ref;
   AUTH.unsub = fsM.onSnapshot(ref, snap => {
     if (AUTH.ref !== ref || snap.metadata.hasPendingWrites) return;
+    // While offline, Firestore can report "no document" from its empty local cache. Wait for the server instead.
+    if (!snap.exists() && snap.metadata.fromCache) return;
     const first = !AUTH.gotFirst; AUTH.gotFirst = true;
     if (!snap.exists()) { if (first) firstSignIn(); return; }
     let remote;
     try { const d = snap.data(); remote = migrate(JSON.parse(d.json)); remote.updatedAt = Number(d.updatedAt) || remote.updatedAt || 0; } catch (e) { return; }
     if (!AUTH.sIsUser || (remote.updatedAt || 0) > (S.updatedAt || 0)) {
-      S = remote; AUTH.sIsUser = true; persistLocal();
+      S = remote; AUTH.sIsUser = true; persistLocal(); if (!AUTH.writing) AUTH.dirty = false;
       if (UI.modal) UI.pendingRender = true; else render();
     } else if ((S.updatedAt || 0) > (remote.updatedAt || 0)) cloudQueue();
-    if (!AUTH.writing) AUTH.status = navigator.onLine === false ? 'offline' : 'synced';
-    renderTop();
-  }, () => { if (AUTH.ref === ref) { AUTH.status = 'error'; renderTop(); toast('Could not reach your account. Changes stay on this device for now.'); } });
+    else if (!AUTH.writing && (S.updatedAt || 0) === (remote.updatedAt || 0)) AUTH.dirty = false;
+    refreshStatus();
+  }, () => { if (AUTH.ref === ref) { AUTH.listenError = true; refreshStatus(); toast('Could not reach your account. Changes stay on this device for now.'); } });
 }
 function firstSignIn() {
-  if (AUTH.sIsUser) { if (S.updatedAt) cloudQueue(); AUTH.status = 'synced'; renderTop(); return; }
+  if (AUTH.sIsUser) { if (S.updatedAt) cloudQueue(); refreshStatus(); return; }
   const g = loadLocal(LS_KEY);
   const hasGuestData = g && !g.sample && ['buckets','interests','todos','purchases','ideas','plans','bucketList'].some(k => g[k].length);
   if (hasGuestData) { S = g; AUTH.status = 'choose'; render(); openModal({ type:'welcome' }); return; }
   S = sample(); AUTH.sIsUser = true; persistLocal(); AUTH.status = 'synced'; render();
   toast(`Signed in as ${AUTH.user.email || AUTH.user.name}`);
 }
-function cloudQueue() { if (!AUTH.ref || !AUTH.sIsUser) return; clearTimeout(AUTH.timer); AUTH.timer = setTimeout(cloudWrite, 800); }
+function cloudQueue() {
+  if (!AUTH.ref || !AUTH.sIsUser) return;
+  AUTH.dirty = true; clearTimeout(AUTH.timer); clearTimeout(AUTH.retryTimer);
+  AUTH.timer = setTimeout(cloudWrite, 800); refreshStatus();
+}
+const RETRY_WAIT = [5, 15, 30, 60];
 async function cloudWrite() {
   if (!AUTH.ref || !AUTH.sIsUser) return;
   if (AUTH.writing) { AUTH.again = true; return; }
-  const ref = AUTH.ref; AUTH.writing = true;
-  AUTH.status = navigator.onLine === false ? 'offline' : 'saving'; renderTop();
+  const ref = AUTH.ref; const stamp = S.updatedAt; AUTH.writing = true; refreshStatus();
   try {
     const json = JSON.stringify(S);
     if (json.length > 900000) throw { code:'too-big' };
     await AUTH.fb.fsM.setDoc(ref, { json, updatedAt: S.updatedAt || Date.now(), schema: 1, savedAt: AUTH.fb.fsM.serverTimestamp() });
-    if (AUTH.ref === ref) AUTH.status = 'synced';
+    if (AUTH.ref === ref) { AUTH.failed = false; AUTH.retry = 0; if (S.updatedAt === stamp && !AUTH.again) AUTH.dirty = false; }
   } catch (e) {
-    if (AUTH.ref === ref) { AUTH.status = 'error'; toast(e && e.code === 'too-big' ? 'Your planner is too big to sync. Remove some old items.' : 'Could not save to your account. Your changes stay on this device.'); }
+    if (AUTH.ref === ref) {
+      const fatal = e && (e.code === 'too-big' || e.code === 'permission-denied' || e.code === 'invalid-argument');
+      if (!AUTH.failed || fatal) toast(e && e.code === 'too-big' ? 'Your planner is too big to sync. Remove some old items.' : 'Could not save to your account. Your changes stay on this device.');
+      AUTH.failed = true;
+      if (!fatal) { const wait = RETRY_WAIT[Math.min(AUTH.retry, RETRY_WAIT.length - 1)] * 1000; AUTH.retry++; clearTimeout(AUTH.retryTimer); AUTH.retryTimer = setTimeout(() => { if (AUTH.ref === ref && AUTH.dirty) cloudWrite(); }, wait); }
+    }
   } finally {
-    AUTH.writing = false; renderTop();
-    if (AUTH.again) { AUTH.again = false; cloudQueue(); }
+    AUTH.writing = false;
+    if (AUTH.again) { AUTH.again = false; cloudQueue(); } else refreshStatus();
   }
 }
 async function signIn() {
@@ -874,8 +913,11 @@ async function deleteCloudData() {
     toast('Your account data was deleted');
   } catch (e) { AUTH.sIsUser = true; toast('Could not delete it. Try again when you are online.'); }
 }
-window.addEventListener('online', () => { if (AUTH.user && AUTH.status === 'offline') { AUTH.status = AUTH.writing ? 'saving' : 'synced'; renderTop(); } });
-window.addEventListener('offline', () => { if (AUTH.user) { AUTH.status = 'offline'; renderTop(); } });
+window.addEventListener('online', recheckSync);
+window.addEventListener('offline', () => { if (AUTH.user) refreshStatus(); });
+window.addEventListener('focus', recheckSync);
+window.addEventListener('pageshow', recheckSync);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheckSync(); });
 let BOOT_UID = null;
 
 /* ---------------- ui state ---------------- */
@@ -1527,7 +1569,8 @@ function renderModal() {
     const u = AUTH.user;
     const account = u
       ? `<div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc(initials(u.name || u.email))}</span><span class="acct-t"><b>${esc(u.name || 'Signed in')}</b><small>${esc(u.email)}</small></span><button type="button" class="btn btn-secondary btn-sm" data-act="sign-out"><span>Sign out</span></button></div>
-         <div class="note">${icon('cloud', 16)} ${AUTH.status === 'synced' ? 'Your planner is saved to your Google account and syncs across your devices. Only you can see it.' : `${storageLabel()}. Your changes are kept on this device and saved to your account when the connection is back.`}</div>`
+         <div class="note" id="sync-note">${icon('cloud', 16)} ${syncNote()}</div>
+         <button type="button" class="btn btn-secondary btn-sm" id="sync-now" data-act="sync-now" ${AUTH.status === 'error' || AUTH.status === 'offline' ? '' : 'hidden'}>Try saving now</button>`
       : AUTH.configured && !AUTH.loadError
         ? `<div class="note">${icon('device', 16)} You are using Mind Bucket as a guest, so your planner is saved in this browser only. Sign in with Google to keep it in your account and use it on any device.</div>
            <button type="button" class="btn btn-primary btn-block" data-act="sign-in">${icon('user')}Continue with Google</button>`
@@ -1575,11 +1618,12 @@ function act(a, el, e) {
   switch (a) {
     case 'nav': go(el.dataset.view); break;
     case 'settings': openModal({ type:'settings' }); break;
+    case 'sync-now': if (AUTH.listenError || AUTH.dirty) { AUTH.failed = false; recheckSync(); if (AUTH.dirty && navigator.onLine === false) toast('Still offline. It will save when you are back online.'); } else refreshStatus(); break;
     case 'toggle-theme': setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark'); break;
     case 'sign-in': signIn(); break;
     case 'sign-out': if ((AUTH.status === 'offline' || AUTH.status === 'error' || AUTH.writing) && !armed(el, 'Not synced yet. Tap again to sign out')) break; closeModal(); signOut(); break;
     case 'delete-cloud': if (!armed(el, 'Tap again to delete it for good')) break; deleteCloudData(); break;
-    case 'migrate-move': { const g = loadLocal(LS_KEY) || S; S = g; S.sample = false; AUTH.sIsUser = true; lsDel(LS_KEY); UI.modal = null; renderModal(); save(); render(); toast('Your planner is now in your account'); break; }
+    case 'migrate-move': { const g = loadLocal(LS_KEY) || S; S = g; S.sample = false; AUTH.sIsUser = true; lsDel(LS_KEY); UI.modal = null; renderModal(); AUTH.status = 'saving'; save(); render(); toast('Your planner is now in your account'); break; }
     case 'migrate-fresh': S = sample(); AUTH.sIsUser = true; persistLocal(); UI.modal = null; renderModal(); AUTH.status = 'synced'; render(); toast('Signed in. Your guest planner stays in this browser.'); break;
     case 'set-theme': setTheme(el.dataset.v); break;
     case 'overlay': if (e.target === el && !(UI.modal && UI.modal.type === 'welcome')) closeModal(); break;
