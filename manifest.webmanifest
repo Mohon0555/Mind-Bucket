@@ -2,7 +2,7 @@
   "name": "Mind Bucket",
   "short_name": "Mind Bucket",
   "description": "Plan your week in buckets: time for work, study, must-dos and the interests you keep putting off.",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#111111",

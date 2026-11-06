@@ -8,12 +8,19 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The whole app: markup, styles and script in one file. No build step. |
+| `index.html` | Home page at `/`: an animated sky-and-meadow hero with a "What do you want to make time for?" bar, how it works, a tour of the sections and questions. |
+| `app.html` | The planner itself at `/app`: markup, styles and script in one file. No build step. |
+| `og.jpg` | Preview image shown when the link is shared |
 | `favicon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Browser and home-screen icons |
 | `manifest.webmanifest` | Lets people add Mind Bucket to their phone's home screen as an app |
 | `vercel.json` | Clean URLs and basic security headers for Vercel |
 | `firebase-config.js` | Firebase web config. `null` means guest-only mode |
 | `firestore.rules` | Security rules: each user can only read and write their own planner |
+
+## Pages
+- `/` is the home page for new visitors. What someone types in its bar opens the planner with that item added (`/app?add=…&to=interest|todo|idea|goal`).
+- `/app` is the planner. People who are signed in, or who already have a planner in this browser, go straight there from `/`. Old links like `/#todo` still work.
+- `/?home` always shows the home page.
 
 ## Deploy on Vercel
 
