@@ -845,12 +845,16 @@ function onUser(u) {
   }, () => { if (AUTH.ref === ref) { AUTH.listenError = true; refreshStatus(); toast('Could not reach your account. Changes stay on this device for now.'); } });
 }
 function firstSignIn() {
-  if (AUTH.sIsUser) { if (S.updatedAt) cloudQueue(); refreshStatus(); return; }
+  // An account copy that is only the untouched sample week (from before new accounts started empty) counts as new.
+  const untouchedSample = S && S.sample && !S.updatedAt;
+  if (AUTH.sIsUser && !untouchedSample) { if (S.updatedAt) cloudQueue(); refreshStatus(); return; }
   const g = loadLocal(LS_KEY);
   const hasGuestData = g && !g.sample && ['buckets','interests','todos','purchases','ideas','plans','bucketList'].some(k => g[k].length);
-  if (hasGuestData) { S = g; AUTH.status = 'choose'; render(); openModal({ type:'welcome' }); return; }
-  S = sample(); AUTH.sIsUser = true; persistLocal(); AUTH.status = 'synced'; render();
-  toast(`Signed in as ${AUTH.user.email || AUTH.user.name}`);
+  if (hasGuestData) { S = g; AUTH.sIsUser = false; AUTH.status = 'choose'; render(); openModal({ type:'welcome' }); return; }
+  // A new account starts with an empty planner (the sample week is only for guests trying the app).
+  S = emptyState(g && g.settings); AUTH.sIsUser = true; UI.ideaSel = null; UI.planSel = null; UI.goalSel = null;
+  save(); render();
+  toast(`Signed in as ${AUTH.user.email || AUTH.user.name}. Start by adding your buckets.`);
 }
 function cloudQueue() {
   if (!AUTH.ref || !AUTH.sIsUser) return;
@@ -1561,7 +1565,7 @@ function renderModal() {
     html = `<div class="mbody"><div class="mhead"><div><h2>Welcome${u.name ? ', ' + esc(u.name.split(' ')[0]) : ''}</h2><p class="muted">You are signed in as ${esc(u.email || u.name || 'your Google account')}.</p></div></div>
       <p>This browser already has a planner from guest mode. Do you want to keep it in your account?</p>
       <div class="welcome-actions"><button type="button" class="btn btn-primary btn-block" data-act="migrate-move">${icon('cloud')}Move it to my account</button>
-      <button type="button" class="btn btn-secondary btn-block" data-act="migrate-fresh">Start fresh with a sample week</button></div>
+      <button type="button" class="btn btn-secondary btn-block" data-act="migrate-fresh">Start fresh with an empty planner</button></div>
       <p class="muted">Moving it saves it to your account and removes the guest copy from this browser.</p></div>`;
   } else if (m.type === 'settings') {
     const cloud = false;
@@ -1624,7 +1628,7 @@ function act(a, el, e) {
     case 'sign-out': if ((AUTH.status === 'offline' || AUTH.status === 'error' || AUTH.writing) && !armed(el, 'Not synced yet. Tap again to sign out')) break; closeModal(); signOut(); break;
     case 'delete-cloud': if (!armed(el, 'Tap again to delete it for good')) break; deleteCloudData(); break;
     case 'migrate-move': { const g = loadLocal(LS_KEY) || S; S = g; S.sample = false; AUTH.sIsUser = true; lsDel(LS_KEY); UI.modal = null; renderModal(); AUTH.status = 'saving'; save(); render(); toast('Your planner is now in your account'); break; }
-    case 'migrate-fresh': S = sample(); AUTH.sIsUser = true; persistLocal(); UI.modal = null; renderModal(); AUTH.status = 'synced'; render(); toast('Signed in. Your guest planner stays in this browser.'); break;
+    case 'migrate-fresh': S = emptyState(S.settings); AUTH.sIsUser = true; UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; UI.modal = null; renderModal(); AUTH.status = 'saving'; save(); render(); toast('Signed in with an empty planner. Your guest planner stays in this browser.'); break;
     case 'set-theme': setTheme(el.dataset.v); break;
     case 'overlay': if (e.target === el && !(UI.modal && UI.modal.type === 'welcome')) closeModal(); break;
     case 'close-modal': closeModal(); break;
