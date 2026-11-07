@@ -22,16 +22,20 @@
     // Tell Clarity this visitor allowed analytics. Mind Bucket shows no ads, so ad storage stays denied.
     window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' });
   }
-  function stopClarity() {
-    // Clarity deletes its cookies for this site and ends the session when consent is withdrawn.
-    if (typeof window.clarity === 'function') window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
+  function clearClarityCookies() {
     ['_clck', '_clsk'].forEach(function (n) {
       ['', '; domain=' + location.hostname, '; domain=.' + location.hostname].forEach(function (d) { document.cookie = n + '=; Max-Age=0; path=/' + d; });
     });
   }
+  function stopClarity() {
+    // Clarity deletes its cookies for this site and ends the session when consent is withdrawn.
+    if (typeof window.clarity === 'function') window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
+    clearClarityCookies();
+  }
 
   var saved = read();
   if (saved && saved.analytics && !gpc) loadClarity();
+  else if (gpc || (saved && !saved.analytics)) clearClarityCookies();
 
   /* ---------- the notice ---------- */
   var CSS = '' +
@@ -83,7 +87,8 @@
       var wasLoaded = loaded;
       write(allow); hideBanner();
       if (allow) loadClarity();
-      else if (wasLoaded) { stopClarity(); setTimeout(function () { location.reload(); }, 150); return; } // reload so the analytics script is gone from this page too
+      else clearClarityCookies(); // also removes any left from before this notice existed
+      if (!allow && wasLoaded) { stopClarity(); setTimeout(function () { location.reload(); }, 150); return; } // reload so the analytics script is gone from this page too
       try { document.dispatchEvent(new CustomEvent('mb-consent', { detail: api.get() })); } catch (e) {}
     },
     open: function () { showBanner(true); }
