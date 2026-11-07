@@ -11,6 +11,9 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 | `index.html` | Home page at `/`: an animated sky-and-meadow hero with a "What do you want to make time for?" bar, how it works, a tour of the sections and questions. |
 | `app.html` | The planner itself at `/app`: markup, styles and script in one file. No build step. |
 | `og.jpg` | Preview image shown when the link is shared |
+| `consent.js` | Cookie notice and consent; loads Microsoft Clarity only after a visitor allows analytics |
+| `privacy.html`, `terms.html`, `legal.css` | Privacy & cookies and Terms of use pages |
+| `fonts/` | Self-hosted Urbanist and Instrument Serif with their licences |
 | `vendor/gsap.min.js`, `vendor/ScrollTrigger.min.js` | GSAP 3.13 (free standard license) for the home page's scroll animations, hosted with the site. If they fail to load, the page still works without them. |
 | `favicon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Browser and home-screen icons |
 | `manifest.webmanifest` | Lets people add Mind Bucket to their phone's home screen as an app |
@@ -23,8 +26,14 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 - `/app` is the planner. People who are signed in, or who already have a planner in this browser, go straight there from `/`. Old links like `/#todo` still work.
 - `/?home` always shows the home page.
 
-## Analytics
-Microsoft Clarity (project `za116caklw`) is in the `<head>` of `index.html` and `app.html`. In the planner, the main view, side panel, dialogs and account area carry `data-clarity-mask="True"`, so people's own planner text and Google account details are hidden in recordings. Clicks, scrolls and heatmaps still work.
+## Privacy, cookies and analytics
+- `consent.js` shows a cookie notice with two equal choices, "No thanks" and "Allow analytics". Microsoft Clarity (project `za116caklw`) loads only after "Allow analytics", and it tells Clarity that ad storage is denied. A browser's Global Privacy Control signal counts as "no".
+- People can change their choice at any time: "Cookie settings" in the footers, or Settings, Analytics cookies in the planner. Turning analytics off deletes Clarity's cookies for the site and reloads the page without it.
+- In the planner, the main view, side panel, dialogs and account area carry `data-clarity-mask="True"`, so planner text and Google account details are masked in recordings.
+- `privacy.html` (`/privacy`) and `terms.html` (`/terms`) explain what is stored and the rules of use, with `legal.css` as their stylesheet. Contact for privacy requests: mohon.hashem@gmail.com.
+- Fonts are self-hosted in `fonts/` (Urbanist and Instrument Serif, SIL Open Font License), so loading the site sends nothing to a font service.
+- "Delete my account" in Settings removes the planner from Firestore and the device, and deletes the Firebase sign-in record, asking Google to confirm the account if needed.
+- If you change what data is collected, update the policy date, and raise `VERSION` in `consent.js` so everyone is asked again.
 
 ## Deploy on Vercel
 

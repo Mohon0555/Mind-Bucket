@@ -19,18 +19,11 @@
 <meta property="og:title" content="Mind Bucket">
 <meta property="og:description" content="Plan your week in buckets: time for work, study, must-dos and the interests you keep putting off.">
 <meta property="og:image" content="https://mind-bucket.vercel.app/og.jpg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap">
+<link rel="preload" href="/fonts/urbanist-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <script>try{var t=localStorage.getItem('mindbucket.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
-<!-- Microsoft Clarity -->
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "za116caklw");
-</script>
+<!-- Cookie notice. Microsoft Clarity (za116caklw) loads only after a visitor allows analytics. -->
+<script src="/consent.js"></script>
 <style>
 /* Layout: black app frame → top bar → rounded grey canvas (main column + side panel) → floating quick-add dock */
 :root{
@@ -108,6 +101,7 @@ h3{font-size:18px;line-height:24px;font-weight:500}
 .h2{display:block;font-size:22px;line-height:28px;font-weight:500;letter-spacing:-.005em;color:var(--ink)}
 .overline{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .muted{color:var(--ink-2);font-size:13px;line-height:18px}
+.modal a{color:var(--ink);text-underline-offset:2px}
 .faint{color:var(--ink-3)}
 .num{font-variant-numeric:tabular-nums}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -922,8 +916,18 @@ async function deleteCloudData() {
     clearTimeout(AUTH.timer); AUTH.sIsUser = false;
     await AUTH.fb.fsM.deleteDoc(ref);
     lsDel(userKey(uid)); lsDel(LAST_UID_KEY); closeModal();
-    await AUTH.fb.authM.signOut(AUTH.fb.auth);
-    toast('Your account data was deleted');
+    // Remove the sign-in record (name, email, photo) too. Google may ask to confirm the account first.
+    const { authM, auth } = AUTH.fb; const user = auth.currentUser; let removed = false;
+    if (user) {
+      try { await authM.deleteUser(user); removed = true; }
+      catch (e) {
+        if (e && e.code === 'auth/requires-recent-login') {
+          try { await authM.reauthenticateWithPopup(user, new authM.GoogleAuthProvider()); await authM.deleteUser(user); removed = true; } catch (e2) {}
+        }
+      }
+    }
+    if (!removed) await authM.signOut(auth);
+    toast(removed ? 'Your account and planner were deleted' : 'Your planner was deleted. To remove your sign-in record too, email mohon.hashem@gmail.com', 7000);
   } catch (e) { AUTH.sIsUser = true; toast('Could not delete it. Try again when you are online.'); }
 }
 window.addEventListener('online', recheckSync);
@@ -1069,6 +1073,13 @@ function renderDock() {
 /* ---------------- shared bits ---------------- */
 const head = (over, title, controls) => `<div class="head"><div class="ttl"><span class="overline">${over}</span><h1>${title}</h1></div><div class="controls">${controls || ''}</div></div>`;
 const banner = () => S.sample ? `<div class="banner" role="note"><p>This is a sample week so you can see how Mind Bucket works. Change anything, or start with a clean slate.</p><button class="btn btn-secondary btn-sm" data-act="keep-sample">Keep sample</button><button class="btn btn-primary btn-sm" data-act="start-fresh">Start fresh</button></div>` : '';
+function privacyField() {
+  const c = window.MBConsent ? window.MBConsent.get() : null;
+  const ctl = !c ? '<p class="muted" style="margin:0">Analytics is off.</p>'
+    : c.gpc ? '<p class="muted" style="margin:0">Analytics is off because your browser sends a Global Privacy Control signal.</p>'
+    : seg('set-analytics', [['on', 'Allowed'], ['off', 'Off']], c.analytics ? 'on' : 'off');
+  return `<div class="field"><span>Analytics cookies (Microsoft Clarity)</span>${ctl}<p class="muted" style="margin:0;font-size:13px">When allowed, Clarity records clicks and scrolling to help improve Mind Bucket. What you type in your planner and your account details are hidden from it. <a href="/privacy" target="_blank" rel="noopener">Privacy &amp; cookies</a> · <a href="/terms" target="_blank" rel="noopener">Terms of use</a></p></div>`;
+}
 const seg = (act, items, cur) => `<div class="seg" role="group">${items.map(([v, l, c]) => `<button type="button" data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}${c != null ? `<span class="c">${c}</span>` : ''}</button>`).join('')}</div>`;
 const stat = (tone, v, l) => `<div class="stat ${tone === 'outline' ? 'outline' : 't-' + tone}"><b>${v}</b><span>${l}</span></div>`;
 function dropZones(list, emptyMsg) {
@@ -1586,16 +1597,18 @@ function renderModal() {
          <button type="button" class="btn btn-secondary btn-sm" id="sync-now" data-act="sync-now" ${AUTH.status === 'error' || AUTH.status === 'offline' ? '' : 'hidden'}>Try saving now</button>`
       : AUTH.configured && !AUTH.loadError
         ? `<div class="note">${icon('device', 16)} You are using Mind Bucket as a guest, so your planner is saved in this browser only. Sign in with Google to keep it in your account and use it on any device.</div>
-           <button type="button" class="btn btn-primary btn-block" data-act="sign-in">${icon('user')}Continue with Google</button>`
+           <button type="button" class="btn btn-primary btn-block" data-act="sign-in">${icon('user')}Continue with Google</button>
+           <p class="muted" style="margin:0;font-size:13px">By signing in you agree to the <a href="/terms" target="_blank" rel="noopener">Terms of use</a>. The <a href="/privacy" target="_blank" rel="noopener">Privacy &amp; cookies</a> page explains what is stored.</p>`
         : `<div class="note">${icon('device', 16)} Your planner is saved in this browser only. Clearing your browser data removes it, so download a backup now and then. A backup also moves your planner to another browser or device.</div>`;
     html = `<div class="mbody">${u ? mhead('Account & settings') : mhead('Guest settings', 'No account needed. You are using Mind Bucket as a guest.')}
       ${account}
       <div class="field"><span>Appearance</span>${seg('set-theme', [['light','Light'],['dark','Dark'],['system','Match my device']], THEME)}</div>
       <div class="two">${field('Week starts on', `<select data-change="set-week" id="f-sweek">${[[6,'Saturday'],[0,'Sunday'],[1,'Monday']].map(([v, l]) => `<option value="${v}" ${Number(S.settings.weekStart) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
       <div class="two">${field('Day starts', `<select data-change="set-start" id="f-sstart">${hourOpt(S.settings.dayStart, 4, 10)}</select>`)}${field('Day ends', `<select data-change="set-end" id="f-send">${hourOpt(S.settings.dayEnd, 18, 24)}</select>`)}</div></div>
+      ${privacyField()}
       <section class="field"><span>Backup</span><textarea id="f-export" readonly rows="3" aria-label="Backup data">${esc(JSON.stringify(S))}</textarea><div class="tpl"><button type="button" class="btn btn-secondary btn-sm" data-act="download-export">Download backup file</button><button type="button" class="btn btn-ghost btn-sm" data-act="copy-export">Copy as text</button></div></section>
       <form data-form="import" style="padding:0;gap:8px"><label class="field"><span>Restore from a backup</span><textarea name="json" id="f-import" rows="3" placeholder="Paste a backup here"></textarea></label><p class="err" aria-live="polite"></p><div class="tpl"><label class="btn btn-ghost btn-sm" style="cursor:pointer">Open a backup file<input type="file" id="f-import-file" accept="application/json,.json" data-change="import-file" hidden></label><button type="submit" class="btn btn-secondary btn-sm">Restore</button></div></form>
-      <div class="mfoot"><div class="tpl"><button type="button" class="btn btn-ghost btn-sm" data-act="load-sample">Load the sample week</button><button type="button" class="btn btn-ghost btn-sm" data-act="clear-all">${icon('trash', 16)}<span>Clear everything</span></button>${u ? `<button type="button" class="btn btn-ghost btn-sm" data-act="delete-cloud">${icon('trash', 16)}<span>Delete my account data</span></button>` : ''}</div><div class="r"><button type="button" class="btn btn-primary" data-act="close-modal">Done</button></div></div></div>`;
+      <div class="mfoot"><div class="tpl"><button type="button" class="btn btn-ghost btn-sm" data-act="load-sample">Load the sample week</button><button type="button" class="btn btn-ghost btn-sm" data-act="clear-all">${icon('trash', 16)}<span>Clear everything</span></button>${u ? `<button type="button" class="btn btn-ghost btn-sm" data-act="delete-cloud">${icon('trash', 16)}<span>Delete my account</span></button>` : ''}</div><div class="r"><button type="button" class="btn btn-primary" data-act="close-modal">Done</button></div></div></div>`;
   }
   root.innerHTML = `<div class="overlay" data-act="overlay"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
 }
@@ -1621,7 +1634,7 @@ function render() {
   if (UI.modal) renderModal();
 }
 let toastTimer;
-function toast(msg) { const el = $('#toast'); el.textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, 2800); }
+function toast(msg, ms = 2800) { const el = $('#toast'); el.textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, ms); }
 function go(view) { if (!VIEWS.some(v => v.id === view)) view = 'calendar'; UI.view = view; if (location.hash.slice(1) !== view) { try { history.replaceState(null, '', '#' + view); } catch (e) { location.hash = view; } } const m = $('#main'), p = $('#panel'), s = $('#shell'); render(); [m, p, s].forEach(x => { if (x) x.scrollTop = 0; }); }
 
 /* ---------------- actions ---------------- */
@@ -1635,7 +1648,8 @@ function act(a, el, e) {
     case 'toggle-theme': setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark'); break;
     case 'sign-in': signIn(); break;
     case 'sign-out': if ((AUTH.status === 'offline' || AUTH.status === 'error' || AUTH.writing) && !armed(el, 'Not synced yet. Tap again to sign out')) break; closeModal(); signOut(); break;
-    case 'delete-cloud': if (!armed(el, 'Tap again to delete it for good')) break; deleteCloudData(); break;
+    case 'delete-cloud': if (!armed(el, 'Tap again to delete your account and planner for good')) break; deleteCloudData(); break;
+    case 'set-analytics': if (window.MBConsent) window.MBConsent.set(el.dataset.v === 'on'); renderModal(); break;
     case 'migrate-move': { const g = loadLocal(LS_KEY) || S; S = g; S.sample = false; AUTH.sIsUser = true; lsDel(LS_KEY); UI.modal = null; renderModal(); AUTH.status = 'saving'; save(); render(); toast('Your planner is now in your account'); break; }
     case 'migrate-fresh': S = emptyState(S.settings); AUTH.sIsUser = true; UI.ideaSel = null; UI.planSel = null; UI.goalSel = null; UI.modal = null; renderModal(); AUTH.status = 'saving'; save(); render(); toast('Signed in with an empty planner. Your guest planner stays in this browser.'); break;
     case 'set-theme': setTheme(el.dataset.v); break;

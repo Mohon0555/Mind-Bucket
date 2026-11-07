@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy & cookies · Mind Bucket</title>
+<meta name="description" content="What Mind Bucket stores, where it is kept, how optional analytics works, and how to download or delete your data.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://mind-bucket.vercel.app/privacy">
+<script>try{var t=localStorage.getItem('mindbucket.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script src="/consent.js"></script>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/legal.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <a class="brand" href="/?home"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="23" height="23" rx="7" fill="#FBE18A"/><rect x="35" y="6" width="23" height="23" rx="7" fill="#D9BFF5"/><rect x="6" y="35" width="23" height="23" rx="7" fill="#B6EBBB"/><rect x="35" y="35" width="23" height="23" rx="7" fill="#BEE3F8"/></svg><span><i>Mind</i> Bucket</span></a>
+  <a class="open" href="/app">Open planner</a>
+</header>
+
+<main id="main">
+  <h1>Privacy &amp; cookies</h1>
+  <p class="updated">Last updated 7 November 2026</p>
+  <p class="lead">Mind Bucket is a free week planner. This page explains what it stores, where it is kept, why, and the choices you have.</p>
+
+  <section class="short" aria-labelledby="short">
+    <h2 id="short">In short</h2>
+    <ul>
+      <li>No ads. We never sell your planner or share it with advertisers.</li>
+      <li>You can use Mind Bucket as a guest without giving us any personal information.</li>
+      <li>Analytics runs only if you allow it, and what you type in your planner is hidden from it.</li>
+      <li>You can download a copy of your planner or delete it at any time.</li>
+    </ul>
+  </section>
+
+  <h2 id="who">Who runs Mind Bucket</h2>
+  <p>Mind Bucket is an independent project. For any question about your data, or to ask us to see, correct or delete it, email <span class="mail">mohon.hashem@gmail.com</span>. We aim to reply within 30 days.</p>
+
+  <h2 id="stored">What Mind Bucket stores</h2>
+  <h3>When you use it as a guest</h3>
+  <p>Your planner (buckets, interests, to-dos, purchases, ideas, plans, bucket list and settings) is saved in your browser's local storage on your device. It is not sent to us. Clearing this site's data in your browser deletes it, so download a backup now and then from Settings.</p>
+  <h3>When you sign in with Google</h3>
+  <ul>
+    <li>Google shares your name, email address and profile photo with us through Firebase Authentication, a Google service. We use them only to sign you in and to show whose planner is open.</li>
+    <li>Your planner is saved in Cloud Firestore, a Google database, in the asia-south1 region (Mumbai, India). Security rules let only your signed-in account read or change it.</li>
+    <li>A copy stays in your browser so Mind Bucket works offline, and Firebase keeps you signed in using your browser's storage.</li>
+    <li>If you already had a guest planner on that device, you choose whether to move it into your account.</li>
+  </ul>
+  <h3>Website hosting</h3>
+  <p>Vercel hosts the site. Like any web host, its servers handle your IP address and basic request details, such as your browser type, to deliver pages and keep the service secure. We don't use Vercel's analytics.</p>
+  <h3>Fonts and code</h3>
+  <p>Fonts and animation code are served from our own site. The planner also loads Google's Firebase code from gstatic.com so that sign-in and sync work.</p>
+
+  <h2 id="analytics">Analytics, only if you allow it</h2>
+  <p>If you choose <b>Allow analytics</b>, we load Microsoft Clarity. It shows us how people use Mind Bucket through session recordings, heatmaps and summary numbers: the pages you visit, clicks, taps, scrolling and mouse movement, and your device, browser and screen size. In the planner, everything you type and your account details are masked, so they don't appear in recordings.</p>
+  <ul>
+    <li>Microsoft keeps recordings for 30 days, and heatmap and click data for 9 months.</li>
+    <li>Microsoft handles this data under the <a href="https://privacy.microsoft.com/privacystatement" rel="noopener">Microsoft Privacy Statement</a>.</li>
+    <li>We tell Clarity that advertising storage is not allowed. Mind Bucket doesn't use advertising.</li>
+    <li>If you choose <b>No thanks</b>, or your browser sends a Global Privacy Control signal, Clarity is not loaded at all.</li>
+  </ul>
+
+  <h2 id="cookies">Cookies and similar storage</h2>
+  <p>The first five items are needed for Mind Bucket to work, so they are set without asking. The Microsoft cookies are set only if you allow analytics.</p>
+  <div class="tablewrap" role="region" aria-label="Cookies and storage" tabindex="0">
+    <table>
+      <thead><tr><th scope="col">Name</th><th scope="col">Set by</th><th scope="col">What it does</th><th scope="col">When</th></tr></thead>
+      <tbody>
+        <tr><td><code>mindbucket.v1</code></td><td>Mind Bucket, local storage</td><td>Your guest planner</td><td>When you use the planner</td></tr>
+        <tr><td><code>mindbucket.v1.u.…</code>, <code>mindbucket.lastUid</code></td><td>Mind Bucket, local storage</td><td>The offline copy of your signed-in planner</td><td>When you sign in</td></tr>
+        <tr><td><code>mindbucket.theme</code></td><td>Mind Bucket, local storage</td><td>Remembers light or dark mode</td><td>When you pick one</td></tr>
+        <tr><td><code>mindbucket.consent</code></td><td>Mind Bucket, local storage</td><td>Remembers your cookie choice and when you made it</td><td>After you choose</td></tr>
+        <tr><td><code>firebaseLocalStorageDb</code></td><td>Google Firebase, IndexedDB</td><td>Keeps you signed in</td><td>When you sign in</td></tr>
+        <tr><td><code>_clck</code>, <code>_clsk</code></td><td>Microsoft Clarity, cookies on this site</td><td>Recognise a returning visitor and join page views into one session</td><td>Only if you allow analytics</td></tr>
+        <tr><td><code>CLID</code>, <code>MUID</code>, <code>MR</code>, <code>SM</code>, <code>ANONCHK</code></td><td>Microsoft, cookies on Microsoft domains</td><td>Microsoft's identifiers for Clarity and its other services. <code>ANONCHK</code> is always 0 because Clarity doesn't use advertising IDs.</td><td>Only if you allow analytics</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>You can change your choice at any time. If you turn analytics off, Clarity deletes its cookies for this site and the page reloads without it. Cookies Microsoft set on its own domains can be cleared in your browser settings.</p>
+  <p><button type="button" class="btn" data-consent-open>Cookie settings</button></p>
+
+  <h2 id="rights">Your choices and rights</h2>
+  <ul>
+    <li><b>Get a copy.</b> In the planner, Settings, Download backup file gives you everything in your planner as a file.</li>
+    <li><b>Delete as a guest.</b> Settings, Clear everything, or clear this site's data in your browser.</li>
+    <li><b>Delete your account.</b> Settings, Delete my account removes your planner from our database and from this device, and deletes your sign-in record. Google may ask you to confirm your account first. If that doesn't work, email us and we'll finish it.</li>
+    <li><b>Disconnect Google.</b> You can also remove Mind Bucket's access in your Google Account's security settings.</li>
+    <li><b>Ask us.</b> Email us to see, correct or delete what we hold about you, or to object to how we use it. Depending on where you live, you may also have the right to complain to your local data protection authority.</li>
+  </ul>
+
+  <h2 id="children">Children</h2>
+  <p>Mind Bucket isn't meant for children under 13, and we don't knowingly collect their information. If you think a child has signed in, email us and we'll delete the account.</p>
+
+  <h2 id="security">Security</h2>
+  <p>The site uses HTTPS, and database rules limit each planner to its owner. No online service can promise perfect security, so keep a backup of anything important.</p>
+
+  <h2 id="changes">Changes to this page</h2>
+  <p>When we change how Mind Bucket uses data, we'll update this page and the date at the top. If we add a new kind of analytics, we'll ask for your consent again.</p>
+
+  <h2 id="contact">Contact</h2>
+  <p>Email <span class="mail">mohon.hashem@gmail.com</span>. See also the <a href="/terms">Terms of use</a>.</p>
+</main>
+
+<footer>
+  <nav aria-label="Footer"><a href="/?home">Home</a><a href="/app">Open the planner</a><a href="/privacy" aria-current="page">Privacy &amp; cookies</a><a href="/terms">Terms of use</a><button type="button" data-consent-open>Cookie settings</button></nav>
+  <span>© 2026 Mind Bucket</span>
+</footer>
+</body>
+</html>

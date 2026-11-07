@@ -33,17 +33,11 @@
   if (g && (g.sample === false || g.updatedAt > 0)) location.replace('/app');
 } catch (e) {} })();
 </script>
-<!-- Microsoft Clarity -->
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "za116caklw");
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Urbanist:wght@300;400;500;600;700&display=swap">
+<!-- Cookie notice. Microsoft Clarity (za116caklw) loads only after a visitor allows analytics. -->
+<script src="/consent.js"></script>
+<link rel="preload" href="/fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/urbanist-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <style>
 :root{
   color-scheme:light;
@@ -364,7 +358,8 @@ html.gsap .hero-copy,html.gsap #screen-wrap,html.gsap .field{will-change:transfo
 footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px;padding:40px 0 48px;color:var(--ink-2);font-size:15px}
 footer .brand{color:var(--ink);font-size:22px}
 footer nav{display:flex;flex-wrap:wrap;gap:6px 22px}
-footer nav a{text-decoration:none}
+footer nav a,footer .linkish{text-decoration:none;color:inherit;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+footer .linkish:hover{text-decoration:underline}
 footer nav a:hover{text-decoration:underline}
 
 /* ---------- responsive ---------- */
@@ -671,7 +666,8 @@ footer nav a:hover{text-decoration:underline}
           <details><summary>Do I need an account?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. Open the planner and start. Sign in with Google later if you want your planner on more than one device.</p></details>
           <details><summary>Is it free?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. Mind Bucket is free to use.</p></details>
           <details><summary>What is a bucket?<svg class="ic"><use href="#i-plus"/></svg></summary><p>A regular block of time, like “Slow morning, 8–10 am” or “Full-time job, 2–10 pm”. You fill your buckets with interests, to-dos and ideas, so each one has a time to happen.</p></details>
-          <details><summary>Where is my planner saved?<svg class="ic"><use href="#i-plus"/></svg></summary><p>As a guest, in this browser on this device. Once you sign in, in your Google account, where only you can read it.</p></details>
+          <details><summary>Where is my planner saved?<svg class="ic"><use href="#i-plus"/></svg></summary><p>As a guest, in this browser on this device. Once you sign in, in your account in Google's Firebase database, where only you can read it. The <a href="/privacy">Privacy &amp; cookies</a> page has the details.</p></details>
+          <details><summary>Do you sell my data or show ads?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. Mind Bucket has no ads and never sells or shares your planner. Analytics runs only if you allow it, and what you type in your planner is hidden from it. You can download or delete your planner at any time.</p></details>
           <details><summary>What goes on the bucket list?<svg class="ic"><use href="#i-plus"/></svg></summary><p>The big things you want to do once, like scuba diving, paragliding or a bungee jump. Give each one a year and a first step, and turn it into a trip plan when you’re ready.</p></details>
           <details><summary>Can I use it on my phone?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. It works in any phone browser, and you can add it to your home screen so it opens like an app.</p></details>
         </div>
@@ -689,7 +685,7 @@ footer nav a:hover{text-decoration:underline}
 
       <footer>
         <a class="brand" href="/?home"><span><i>Mind</i> Bucket</span></a>
-        <nav aria-label="Footer"><a href="/app">Open the planner</a><a href="#how">How it works</a><a href="#sections">Sections</a><a href="#questions">Questions</a></nav>
+        <nav aria-label="Footer"><a href="/app">Open the planner</a><a href="#how">How it works</a><a href="#sections">Sections</a><a href="#questions">Questions</a><a href="/privacy">Privacy &amp; cookies</a><a href="/terms">Terms of use</a><button type="button" class="linkish" data-consent-open>Cookie settings</button></nav>
         <span>© 2026 Mind Bucket</span>
       </footer>
     </div>
@@ -1042,7 +1038,7 @@ const scene = (() => {
   const hero_ = new Meadow($('#field-back'), $('#field-front'), 7);
   const still = new Meadow($('#field-still'), null, 21);
   const closing = $('.closing');
-  let W = 0, H = 0, cloudScale = 0, starList = [], T = 0, last = 0, running = false, visible = true, raf = 0;
+  let W = 0, H = 0, cloudScale = 0, starList = [], T = 0, last = 0, running = false, visible = true, raf = 0, inited = false; // nothing draws until init() has laid the meadow out
   const P = { on: false, x: 0, y: 0, r: 120 };
 
   function buildClouds() {
@@ -1086,9 +1082,9 @@ const scene = (() => {
     if (!running) return; const dt = Math.min(50, now - last || 16.7); last = now; T += dt / 1000;
     render(dt / 16.67); raf = requestAnimationFrame(frame);
   }
-  function start() { if (running || reduceMQ.matches || !visible || document.hidden) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+  function start() { if (!inited || running || reduceMQ.matches || !visible || document.hidden) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
   function stop() { running = false; cancelAnimationFrame(raf); }
-  function still_() { T = 2; for (let i = 0; i < 4; i++) render(1); still.draw(2, 1, null); }
+  function still_() { if (!inited) return; T = 2; for (let i = 0; i < 4; i++) render(1); still.draw(2, 1, null); }
   function refresh() { layout(); still_(); hero.classList.add('ready'); start(); }
 
   hero.addEventListener('pointermove', e => { const r = hero.getBoundingClientRect(); P.x = e.clientX - r.left; P.y = e.clientY - r.top; P.on = true; }, { passive: true });
@@ -1103,8 +1099,9 @@ const scene = (() => {
   if (!G) window.addEventListener('scroll', () => { if (ticking || reduceMQ.matches) return; ticking = true; requestAnimationFrame(() => { ticking = false; const y = Math.min(window.scrollY, H); const t = `translate3d(0,${(y * .3).toFixed(1)}px,0)`; $('.sky').style.transform = t; cloudsEl.style.transform = t; }); }, { passive: true });
 
   return {
-    init() { lastW = hero.clientWidth; lastH = hero.clientHeight; refresh(); },
+    init() { inited = true; lastW = hero.clientWidth; lastH = hero.clientHeight; refresh(); },
     retheme(animate) {
+      if (!inited) return; // init() paints in the current theme anyway
       const fields = [hero_.back, hero_.front, still.back];
       const apply = () => { hero_.paintGrass(); hero_.makeSprites(); still.paintGrass(); still.makeSprites(); paintClouds(); still_(); fields.forEach(c => c.classList.remove('swap')); };
       if (animate && !reduceMQ.matches) { fields.forEach(c => c.classList.add('swap')); setTimeout(apply, 260); } else apply();

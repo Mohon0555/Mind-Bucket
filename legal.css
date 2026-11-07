@@ -1,0 +1,51 @@
+/* Shared styles for the Privacy & cookies and Terms pages */
+:root{
+  color-scheme:light;
+  --canvas:#F3F3F3; --surface:#FFFFFF; --line:#E2E2E2; --ink:#111111; --ink-2:#4E4E4E; --ink-3:#6B6B6B;
+  --accent-bg:#E1F1FB; --accent-fg:#1D5F86;
+  --font:"Urbanist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Instrument Serif",ui-serif,Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){color-scheme:dark;--canvas:#151515;--surface:#1F1F1F;--line:#2C2C2C;--ink:#F2F2F2;--ink-2:#BDBDBD;--ink-3:#8F8F8F;--accent-bg:#132A3A;--accent-fg:#A9D8F5}
+}
+:root[data-theme="dark"]{color-scheme:dark;--canvas:#151515;--surface:#1F1F1F;--line:#2C2C2C;--ink:#F2F2F2;--ink-2:#BDBDBD;--ink-3:#8F8F8F;--accent-bg:#132A3A;--accent-fg:#A9D8F5}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;background:var(--canvas);color:var(--ink);font:400 18px/1.65 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-underline-offset:3px}
+a:hover{color:var(--accent-fg)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.skip{position:fixed;left:16px;top:-60px;z-index:50;background:var(--ink);color:var(--canvas);padding:10px 14px;border-radius:10px;text-decoration:none}
+.skip:focus{top:16px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;width:min(1040px,100%);margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 22px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;font:400 24px/1 var(--serif);color:var(--ink)}
+.brand i{font-style:italic}
+.brand svg{width:22px;height:22px}
+.open{display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:999px;background:var(--ink);color:var(--canvas);text-decoration:none;font:600 15px/1 var(--font)}
+.open:hover{color:var(--canvas);opacity:.9}
+main{width:min(760px,100%);margin:0 auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+h1{margin:24px 0 8px;font:400 clamp(48px,8vw,72px)/1 var(--serif);letter-spacing:-.012em;text-wrap:balance}
+.updated{margin:0 0 28px;color:var(--ink-3);font-size:15px}
+.lead{font-size:20px;color:var(--ink-2);margin:0 0 28px;max-width:60ch}
+h2{margin:52px 0 12px;font:600 26px/1.25 var(--font);text-wrap:balance;scroll-margin-top:24px}
+h3{margin:28px 0 8px;font:600 20px/1.3 var(--font)}
+p,ul{margin:0 0 14px;max-width:66ch}
+ul{padding-left:22px}
+li{margin:6px 0}
+.short{background:var(--surface);border-radius:22px;padding:22px 26px;margin:0 0 8px}
+.short h2{margin:0 0 8px;font-size:20px}
+.short ul{margin:0}
+.tablewrap{overflow-x:auto;margin:16px 0 18px;border-radius:16px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:15px;line-height:1.45}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+code{font:500 14px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--canvas);padding:2px 6px;border-radius:6px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;height:42px;padding:0 18px;border-radius:999px;border:1.5px solid var(--ink);background:none;color:var(--ink);font:600 15px/1 var(--font);cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--canvas)}
+.mail{font-weight:600;user-select:all}
+footer{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;justify-content:space-between;width:min(1040px,100%);margin:0 auto;padding:32px max(16px,env(safe-area-inset-right,0px)) 44px max(16px,env(safe-area-inset-left,0px));color:var(--ink-2);font-size:15px;border-top:1px solid var(--line)}
+footer nav{display:flex;flex-wrap:wrap;gap:6px 20px}
+footer a,footer button{color:var(--ink-2);text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+footer a:hover,footer button:hover{color:var(--ink);text-decoration:underline}
