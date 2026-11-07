@@ -23,6 +23,9 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 - `/app` is the planner. People who are signed in, or who already have a planner in this browser, go straight there from `/`. Old links like `/#todo` still work.
 - `/?home` always shows the home page.
 
+## Analytics
+Microsoft Clarity (project `za116caklw`) is in the `<head>` of `index.html` and `app.html`. In the planner, the main view, side panel, dialogs and account area carry `data-clarity-mask="True"`, so people's own planner text and Google account details are hidden in recordings. Clicks, scrolls and heatmaps still work.
+
 ## Deploy on Vercel
 
 ### Option A: GitHub + Vercel dashboard (recommended)

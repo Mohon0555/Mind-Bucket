@@ -23,6 +23,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap">
 <script>try{var t=localStorage.getItem('mindbucket.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<!-- Microsoft Clarity -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "za116caklw");
+</script>
 <style>
 /* Layout: black app frame → top bar → rounded grey canvas (main column + side panel) → floating quick-add dock */
 :root{
@@ -496,9 +504,9 @@ fieldset.field{border:0;padding:0;margin:0}
 <body>
 <noscript><p style="margin:24px 0;padding:16px;border-radius:16px;background:#FFF3C4;color:#6E5300;font:500 15px/22px system-ui,sans-serif">Mind Bucket needs JavaScript to run. Turn it on in your browser settings, then reload this page.</p></noscript>
 <header class="top" id="top"></header>
-<div class="shell" id="shell"><main class="main" id="main"></main><aside class="panel" id="panel" aria-label="Side panel"></aside></div>
+<div class="shell" id="shell"><main class="main" id="main" data-clarity-mask="True"></main><aside class="panel" id="panel" aria-label="Side panel" data-clarity-mask="True"></aside></div>
 <nav class="dock" id="dock" aria-label="Quick add"></nav>
-<div id="modal-root"></div>
+<div id="modal-root" data-clarity-mask="True"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="/firebase-config.js"></script>
@@ -1040,7 +1048,7 @@ function renderTop() {
     <nav class="nav" aria-label="Sections">
       ${VIEWS.map(v => `<button type="button" data-act="nav" data-view="${v.id}" aria-label="${v.label}" title="${v.label}" ${UI.view === v.id ? 'aria-current="page"' : ''}>${icon(v.icon, 20)}<span class="lbl">${v.label}</span></button>`).join('')}
     </nav>
-    <div class="who">
+    <div class="who" data-clarity-mask="True">
       <button class="theme-btn" data-act="toggle-theme" aria-label="Switch to ${next} mode" title="Switch to ${next} mode">${icon(eff === 'dark' ? 'sun' : 'moon', 18)}</button>
       ${AUTH.user
         ? `<button class="status${AUTH.status === 'error' || AUTH.status === 'offline' ? ' warn' : ''}" data-act="settings" title="${storageLabel()}">${icon(AUTH.status === 'synced' ? 'cloud' : AUTH.status === 'offline' ? 'device' : 'clock', 16)}<span class="t">${storageLabel()}</span></button>
