@@ -6,7 +6,7 @@
   'use strict';
   var KEY = 'mindbucket.consent', VERSION = 1, CLARITY_ID = 'za116caklw';
   var gpc = navigator.globalPrivacyControl === true;
-  var loaded = false, banner = null;
+  var loaded = false, banner = null, spacer = null, ro = null;
 
   function read() { try { var c = JSON.parse(localStorage.getItem(KEY) || 'null'); return c && c.v === VERSION ? c : null; } catch (e) { return null; } }
   function write(analytics) { try { localStorage.setItem(KEY, JSON.stringify({ v: VERSION, analytics: !!analytics, at: new Date().toISOString() })); } catch (e) {} }
@@ -40,20 +40,33 @@
   /* ---------- the notice ---------- */
   var CSS = '' +
     '.mbc{position:fixed;left:16px;bottom:calc(16px + var(--mbc-lift,0px) + env(safe-area-inset-bottom,0px));z-index:2147483000;width:min(440px,calc(100% - 32px));' +
-    'box-sizing:border-box;padding:18px 18px 16px;border-radius:22px;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--line,#e2e2e2);' +
+    'box-sizing:border-box;padding:16px 16px 14px;border-radius:22px;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--line,#e2e2e2);' +
     'box-shadow:0 24px 60px -20px rgba(8,26,60,.45);font-family:"Urbanist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;font-weight:400;line-height:1.5;text-align:left}' +
     '.mbc h2{margin:0 0 6px;font-family:inherit;font-size:17px;font-weight:600;line-height:1.3}' +
     '.mbc p{margin:0;color:var(--ink-2,#4e4e4e)}' +
-    '.mbc .mbc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}' +
+    '.mbc .mbc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}' +
     '.mbc button{flex:1 1 140px;height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--ink,#111);background:var(--ink,#111);color:var(--canvas,#fff);font-family:inherit;font-size:15px;font-weight:600;line-height:1;cursor:pointer}' +
     '.mbc button:hover{opacity:.9}' +
     '.mbc button:focus-visible,.mbc a:focus-visible{outline:2px solid var(--ink,#111);outline-offset:3px}' +
-    '.mbc a{display:inline-block;margin-top:10px;color:var(--ink,#111);font-weight:600}' +
-    '.mbc .mbc-note{margin-top:10px;font-size:13px;color:var(--ink-3,#6b6b6b)}' +
+    '.mbc a{color:var(--ink,#111);font-weight:600;white-space:nowrap}' +
+    '.mbc-space{height:var(--mbc-space,0px)}' +
+    '@media (max-width:520px){.mbc{font-size:14px;line-height:1.45;padding:14px 14px 12px;border-radius:20px}.mbc h2{font-size:16px}.mbc .mbc-row{margin-top:10px}.mbc button{flex-basis:100px;height:40px;padding:0 10px;font-size:14px}}' +
+    '.mbc .mbc-note{margin-top:8px;font-size:13px;color:var(--ink-3,#6b6b6b)}' +
     '@media (prefers-reduced-motion:no-preference){.mbc{animation:mbcIn .35s ease-out both}@keyframes mbcIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}}' +
     '@media print{.mbc{display:none}}';
 
-  function hideBanner() { if (banner) { banner.remove(); banner = null; } }
+  /* While the notice is open, leave room at the end of the page (or the planner's panels) to scroll anything out from under it. */
+  function reserve() {
+    if (!banner) return;
+    var lift = document.getElementById('dock') ? 84 : 0;
+    document.documentElement.style.setProperty('--mbc-space', (banner.offsetHeight + lift + 32) + 'px');
+  }
+  function hideBanner() {
+    if (ro) { ro.disconnect(); ro = null; }
+    if (spacer) { spacer.remove(); spacer = null; }
+    document.documentElement.style.removeProperty('--mbc-space');
+    if (banner) { banner.remove(); banner = null; }
+  }
   function showBanner(fromSettings) {
     hideBanner();
     if (!document.getElementById('mbc-css')) { var st = document.createElement('style'); st.id = 'mbc-css'; st.textContent = CSS; document.head.appendChild(st); }
@@ -63,19 +76,21 @@
     banner.className = 'mbc'; banner.setAttribute('aria-labelledby', 'mbc-title');
     banner.innerHTML =
       '<h2 id="mbc-title">Cookies and analytics</h2>' +
-      '<p>Mind Bucket only stores what it needs to work, like your planner in this browser. With your OK, we also use Microsoft Clarity to see how people use the site, such as clicks and scrolling, so we can make it better. What you type in your planner is hidden from it.</p>' +
+      '<p>Mind Bucket only stores what it needs to work, like your planner in this browser. With your OK, Microsoft Clarity also shows us how people use the site (clicks, scrolling) so we can improve it. What you type in your planner stays hidden. <a href="/privacy#cookies">Privacy &amp; cookies</a></p>' +
       (gpc ? '<p class="mbc-note">Your browser sends a Global Privacy Control signal, so analytics stays off.</p>' : '') +
       '<div class="mbc-row">' +
         '<button type="button" data-mbc="no">No thanks</button>' +
         (gpc ? '' : '<button type="button" data-mbc="yes">Allow analytics</button>') +
       '</div>' +
-      (cur ? '<p class="mbc-note">Your current choice: analytics ' + (cur.analytics && !gpc ? 'allowed' : 'off') + '.</p>' : '') +
-      '<a href="/privacy#cookies">Privacy &amp; cookies</a>';
+      (cur ? '<p class="mbc-note">Your current choice: analytics ' + (cur.analytics && !gpc ? 'allowed' : 'off') + '.</p>' : '');
     banner.addEventListener('click', function (e) {
       var b = e.target.closest('[data-mbc]'); if (!b) return;
       api.set(b.getAttribute('data-mbc') === 'yes');
     });
     document.body.appendChild(banner);
+    if (!document.getElementById('dock')) { spacer = document.createElement('div'); spacer.className = 'mbc-space'; spacer.setAttribute('aria-hidden', 'true'); document.body.appendChild(spacer); }
+    reserve();
+    if (window.ResizeObserver) { ro = new ResizeObserver(reserve); ro.observe(banner); } else window.addEventListener('resize', reserve);
     if (fromSettings) { var first = banner.querySelector('button'); if (first) first.focus(); }
   }
 

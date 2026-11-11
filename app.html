@@ -150,8 +150,8 @@ svg{flex:none}
 
 /* shell */
 .shell{flex:1;min-height:0;background:var(--canvas);border-radius:28px 28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) 368px;overflow:hidden}
-.main{overflow-y:auto;padding:32px 32px 120px;display:flex;flex-direction:column;gap:24px;min-width:0}
-.panel{overflow-y:auto;background:var(--subtle);padding:32px 24px 120px;display:flex;flex-direction:column;gap:24px;min-width:0}
+.main{overflow-y:auto;padding:32px 32px max(120px, var(--mbc-space, 0px));display:flex;flex-direction:column;gap:24px;min-width:0}
+.panel{overflow-y:auto;background:var(--subtle);padding:32px 24px max(120px, var(--mbc-space, 0px));display:flex;flex-direction:column;gap:24px;min-width:0}
 .panel section{display:flex;flex-direction:column;gap:10px}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .phead span{color:var(--ink-2);font-weight:500}
@@ -456,7 +456,7 @@ fieldset.field{border:0;padding:0;margin:0}
 @media (max-width: 1080px){
   .shell{grid-template-columns:minmax(0,1fr);overflow-y:auto}
   .main{overflow:visible;padding-bottom:16px}
-  .panel{overflow:visible;background:transparent;padding:8px 32px 120px}
+  .panel{overflow:visible;background:transparent;padding:8px 32px max(120px, var(--mbc-space, 0px))}
   .dock{left:50%}
 }
 @media (max-width: 860px){
@@ -476,7 +476,7 @@ fieldset.field{border:0;padding:0;margin:0}
   .seg button{padding:0 10px}
   .shell{border-radius:20px 20px 0 0}
   .main{padding:20px 16px 12px;gap:20px}
-  .panel{padding:8px 16px 112px}
+  .panel{padding:8px 16px max(112px, var(--mbc-space, 0px))}
   h1{font-size:26px;line-height:32px}
   .cols{grid-template-columns:minmax(0,1fr)}
   .board{grid-template-columns:minmax(0,1fr)}
