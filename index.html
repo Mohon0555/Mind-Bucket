@@ -19,15 +19,21 @@
 <meta property="og:image" content="https://mind-bucket.vercel.app/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <script>
-/* Theme before first paint, and send people who already use the planner straight to it (add ?home to stay here). */
+/* Theme before first paint, and send people who already use the planner straight to it.
+   ?home (the planner's logo links there) keeps them here for the rest of the tab session, so a refresh or the Back button doesn't bounce them into the planner. */
 (function () { try {
   var d = document.documentElement, t = localStorage.getItem('mindbucket.theme');
   if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
   var night = t ? t === 'dark' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
   if (night) d.classList.add('is-night');
-  if (/(^|[?&])home(=|&|$)/.test(location.search)) return;
+  if (/(^|[?&])home(=|&|$)/.test(location.search)) {
+    try { sessionStorage.setItem('mindbucket.home', '1'); } catch (e) {}
+    if (location.search === '?home' && history.replaceState) history.replaceState(null, '', '/' + location.hash);
+    return;
+  }
   var h = location.hash.slice(1);
   if (['calendar','interests','todo','purchases','ideas','plans','bucketlist'].indexOf(h) > -1) { location.replace('/app' + location.hash); return; }
+  try { if (sessionStorage.getItem('mindbucket.home')) return; } catch (e) {}
   if (localStorage.getItem('mindbucket.lastUid')) { location.replace('/app'); return; }
   var g = JSON.parse(localStorage.getItem('mindbucket.v1') || 'null');
   if (g && (g.sample === false || g.updatedAt > 0)) location.replace('/app');

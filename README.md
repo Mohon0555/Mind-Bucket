@@ -24,7 +24,8 @@ Anyone can use it as a guest with no login. A guest's planner is saved in their 
 ## Pages
 - `/` is the home page for new visitors. What someone types in its bar opens the planner with that item added (`/app?add=…&to=interest|todo|idea|goal`).
 - `/app` is the planner. People who are signed in, or who already have a planner in this browser, go straight there from `/`. Old links like `/#todo` still work.
-- `/?home` always shows the home page.
+- `/?home` always shows the home page. The logo in the planner links there, so anyone can get back to the home page, and they stay on it for the rest of that tab (refresh and Back included). The address is tidied back to `/`.
+- New visitors see the home page first. "Open planner" shows the sample week as a demo, and looking at the demo without changing it doesn't count as using the planner.
 
 ## Privacy, cookies and analytics
 - `consent.js` shows a cookie notice with two equal choices, "No thanks" and "Allow analytics". Microsoft Clarity (project `za116caklw`) loads only after "Allow analytics", and it tells Clarity that ad storage is denied. A browser's Global Privacy Control signal counts as "no".

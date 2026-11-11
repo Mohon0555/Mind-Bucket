@@ -118,7 +118,8 @@ svg{flex:none}
 
 /* top bar */
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;flex:none;color:var(--frame-ink);padding-inline:12px}
-.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;background:none;border:0;padding:0}
+.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;background:none;border:0;padding:0;color:inherit;text-decoration:none;border-radius:10px}
+.logo:hover .name{opacity:.8}
 .mark{display:grid;grid-template-columns:12px 12px;gap:4px}
 .mark i{width:12px;height:12px;border-radius:4px;display:block}
 .nav{display:flex;align-items:center;gap:4px;min-width:0}
@@ -1045,10 +1046,10 @@ function renderTop() {
   const cloud = false;
   const eff = effectiveTheme(); const next = eff === 'dark' ? 'light' : 'dark';
   $('#top').innerHTML = `
-    <button class="logo" data-act="nav" data-view="calendar" aria-label="Mind Bucket home">
+    <a class="logo" href="/?home" aria-label="Mind Bucket home page" title="Home page">
       <span class="mark" aria-hidden="true"><i style="background:var(--butter-ac)"></i><i style="background:var(--lavender-ac)"></i><i style="background:var(--mint-ac)"></i><i style="background:var(--sky-ac)"></i></span>
       <span class="name">Mind Bucket</span>
-    </button>
+    </a>
     <nav class="nav" aria-label="Sections">
       ${VIEWS.map(v => `<button type="button" data-act="nav" data-view="${v.id}" aria-label="${v.label}" title="${v.label}" ${UI.view === v.id ? 'aria-current="page"' : ''}>${icon(v.icon, 20)}<span class="lbl">${v.label}</span></button>`).join('')}
     </nav>
